@@ -2,6 +2,11 @@
 //     direction: 'row'/'column', blocks: [
 //     ]
 // }
+const colors = [
+  'ECF1EF', 'FCF6CF', '7FFFD4', '66CDAA', '458B74', 'C2CDCD', 'EED5B7', 'CDB79E',
+  '8A2BE2', 'A52A2A', '5F9EA0', '98F5FF', '8EE5EE', '7AC5CD', '458B00', 'D2691E',
+  'CD661D', '8B4513'
+]
 
 const types = {
     0: 'fixed', 1: 'hor', 2: 'ver', 3: 'all'
@@ -10,24 +15,28 @@ const types = {
 let blockInfo = {}
 
 let source = `
-a0  a0  a0      b0  b0      e0  e0  e0
-a0  a0  a0      b0  b0      e0  e0  e0
-a0  a0  a0      b0  b0      e0  e0  e0
-a0  a0  a0      b0  b0      e0  e0  e0
-                                    
-c2  c2  c2      d2  d2      f3  f3  f3
-c2  c2  c2      d2  d2      f3  f3  f3
-c2  c2  c2      d2  d2      f3  f3  f3
-c2  c2  c2      d2  d2      f3  f3  f3
-c2  c2  c2      d2  d2      f3  f3  f3
-c2  c2  c2      d2  d2      f3  f3  f3
+a0  a0  a0      b0  b0  b0  b0  b0  b0      e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1
+a0  a0  a0      b0  b0  b0  b0  b0  b0      e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1
+a0  a0  a0      b0  b0  b0  b0  b0  b0      e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1
+a0  a0  a0      b0  b0  b0  b0  b0  b0      e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1
+                                            e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1
+c2  c2  c2      d2  d2  d2  d2  d2  d2      e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1
+c2  c2  c2      d2  d2  d2  d2  d2  d2      e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1
+c2  c2  c2      d2  d2  d2  d2  d2  d2      e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1
+c2  c2  c2      d2  d2  d2  d2  d2  d2      e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1
+c2  c2  c2      d2  d2  d2  d2  d2  d2      e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1
+c2  c2  c2      d2  d2  d2  d2  d2  d2      e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1
+                                                                                                                    
+f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3
+f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3
+f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3
 `
 ///////////////////////////////////////////////////////////
 const UNIT_LENGTH = 30;
 prepare();
 console.log(source);
 console.log(blockInfo);
-console.log(layout(source));
+toHtml(layout(source));
 
 function layout(source, direction) {
     const separator = checkSeparator(source);
@@ -35,18 +44,21 @@ function layout(source, direction) {
         return `<div style="width:${separator.width}px; height:${separator.height}px"></div>`;
     }
 
-    const [blocks, nextDirection] = slice(source);
-    let sizeAndGrow = calcSizeAndGrow(source, direction);
+    const [blocks, childDirection] = slice(source);
+    const slicable = blocks.length > 1;
+    let sizeAndGrow = calcSizeAndGrow(source, direction, slicable);
 
-    if (blocks.length == 1) {
+    if (!slicable) {
         // 切到只剩下一块了
-        return `<div style="${sizeAndGrow} background-color:#FCF6CF;"></div>`;
+        return `<div style="${sizeAndGrow} background-color:#${colors[random(colors.length-1)]};">
+            ${source[0][0]}
+        </div>`;
     }
 
-    const flexDirection = !!direction ? `flex-direction:${direction};` : '';
+    const flexDirection = !!direction ? `flex-direction:${childDirection};` : '';
     let html = `<div style="display:flex; ${flexDirection} ${sizeAndGrow}">\n`;
     blocks.forEach(block => {
-        html += layout(block, nextDirection) + '\n';
+        html += layout(block, childDirection) + '\n';
     });
     html += '</div>';
     return html;
@@ -134,58 +146,77 @@ function checkSeparator(source) {
     return result;
 }
 
-function calcGrow(source, direction) {
-    // return blocks.map(block => {
-        let grows;
-        if (direction == 'row') {
-            grows = source.map(row => row.reduce((grow, id) => {
-                const info = blockInfo[id];
-                if (info && (info.type == 'hor' || info.type == 'all')) {
-                    grow++;
-                }
-                return grow;
-            }, 0));
-        } else if (direction == 'column') {
-            grows = [];
-            for (let col = 0, columns = source[0].length; col < columns; col++) {
-                let grow = 0;
-                for (let row = 0, rows = source.length; row < rows; row++) {
-                    const id = source[row][col];
-                    const info = blockInfo[id];
-                    if (!info) {
-                        continue;
-                    }
-                    if (info.type == 'ver' || info.type == 'all') {
-                        grow++;
-                    }
-                }
-                grows.push(grow);
-            }
-        }
-        if (!grows || grows.length == 0) {
-            grows = [0];
-        }
-        return Math.max(...grows);
-        // const grow = Math.max(...grows);
-        // return grow > 0 ? `flex-grow:${grow};` : '';
-    // });
+function containsMultipleBlocks(block) {
+    const target = block[0][0];
+    return block.find(row => row.find(id => id !== target));
 }
 
-function calcSizeAndGrow(source, direction) {
+function calcSizeAndGrow(source, direction, slicable) {
     const grow = calcGrow(source, direction);
+    const physicalSize = !slicable ? calcPhysicalSize(source) : {width: '100%', height: '100%'};
 
-    // return blocks.map((block, idx) => {
-        // const grow = grows[idx];
-        if (direction == 'row') {
-            return grow == 0 ? `width:${source[0].length * UNIT_LENGTH}px; height:100%;` :
-                `flex-grow:${grow}; height:100%;`;
-        } else if (direction == 'column') {
-            return grow == 0 ? `width:100%; height:${source.length * UNIT_LENGTH}px;` :
-                `width:100%; flex-grow:${grow};`;
-        } else {
-            return 'width:100%; height:100%;';
+    if (direction == 'row') {
+        return grow == 0 ? `width:${source[0].length * UNIT_LENGTH}px; height:${physicalSize.height};` :
+            `flex-grow:${grow}; height:${physicalSize.height};`;
+    } else if (direction == 'column') {
+        return grow == 0 ? `width:${physicalSize.width}; height:${source.length * UNIT_LENGTH}px;` :
+            `width:${physicalSize.width}; flex-grow:${grow};`;
+    } else {
+        return 'width:100%; height:100%;';
+    }
+}
+
+function calcGrow(source, direction) {
+    let grows;
+    if (direction == 'row') {
+        grows = source.map(row => row.reduce((grow, id) => {
+            const info = blockInfo[id];
+            if (info && (info.type == 'hor' || info.type == 'all')) {
+                grow++;
+            }
+            return grow;
+        }, 0));
+    } else if (direction == 'column') {
+        grows = [];
+        for (let col = 0, columns = source[0].length; col < columns; col++) {
+            let grow = 0;
+            for (let row = 0, rows = source.length; row < rows; row++) {
+                const id = source[row][col];
+                const info = blockInfo[id];
+                if (!info) {
+                    continue;
+                }
+                if (info.type == 'ver' || info.type == 'all') {
+                    grow++;
+                }
+            }
+            grows.push(grow);
         }
-    // });
+    }
+    if (!grows || grows.length == 0) {
+        grows = [0];
+    }
+    return Math.max(...grows);
+}
+
+// 计算单区块的物理尺寸，只用于计算不可切分区块。
+function calcPhysicalSize(source) {
+    if (containsMultipleBlocks(source)) {
+        // 包含多个不同块，且不能再切分，我们只能无视其延展性，认为它是固定尺寸
+        return {
+            width: `${source[0].length * UNIT_LENGTH}px`,
+            height: `${source.length * UNIT_LENGTH}px`
+        };
+    } else {
+        const id = source[0][0];
+        const scaleType = blockInfo[id].type;
+        return {
+            width: scaleType == 'fixed' || scaleType == 'ver' ?
+                `${source[0].length * UNIT_LENGTH}px` : '100%',
+            height: scaleType == 'fixed' || scaleType == 'hor' ?
+                `${source.length * UNIT_LENGTH}px` : '100%'
+        }
+    }
 }
 
 
@@ -211,28 +242,26 @@ function prepare() {
 }
 
 
-function toHtml() {
-  let html = '', idx = 0;
-  for(let id in blockInfo) {
-    const block = blockInfo[id];
-    html += `
-      <div style="
-        position: absolute; 
-        width: ${block.width}; height: 250px; left: ${block.left}; top: 0;
-        background-color: #${colors[++idx]}; font-size: 10px;
-      ">width=${block.width}<br>id=${id}</div>
+function toHtml(html) {
+    html= `
+        <!DOCTYPE html>
+        <html style="width: 100%; height: 100%;">
+        <head>
+        <meta charset="utf-8">
+        <title>positioned blocks</title>
+        </head>
+        <body style="margin:0; padding:0; width: 100%; height: 100%;">
+
+        ${html}
+
+        </body>
+        </html>
     `;
-  }
-  console.log(`<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>positioned blockInfo</title>
-</head>
-<body style="margin:0; padding:0; width: 1000px height: 600px">
-${html}
-</body>
-</html>`);
+    document.body.innerHTML = html;
+    console.log(html);
 }
 
+function random(max) {
+    return Math.round(Math.random() * max)
+}
 
