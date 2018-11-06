@@ -23,27 +23,32 @@ c2  c2  c2      d2  d2      f3  f3  f3
 c2  c2  c2      d2  d2      f3  f3  f3
 `
 ///////////////////////////////////////////////////////////
-
+const UNIT_LENGTH = 30;
 prepare();
 console.log(source);
 console.log(blockInfo);
 console.log(layout(source));
 
-function layout(source) {
-    const [blocks, direction] = slice(source);
-    const size = direction == 'row' ? 'height:100%' : 'width:100%';
+function layout(source, direction) {
+    const separator = checkSeparator(source);
+    if (separator) {
+        return `<div style="width:${separator.width}px; height:${separator.height}px"></div>`;
+    }
 
-    let html;
+    const [blocks, nextDirection] = slice(source);
+    let sizeAndGrow = calcSizeAndGrow(source, direction);
+
     if (blocks.length == 1) {
         // 切到只剩下一块了
-        html = `<div style="flex-grow: 4; ${size}; background-color: #FCF6CF"></div>`;
-    } else {
-        let html = `<div style="display:flex; flex-direction:row; ${size};">`;
-        blocks.forEach(block => {
-            html += layout(block) + '\n';
-        });
-        html += '</div>';
+        return `<div style="${sizeAndGrow} background-color:#FCF6CF;"></div>`;
     }
+
+    const flexDirection = !!direction ? `flex-direction:${direction};` : '';
+    let html = `<div style="display:flex; ${flexDirection} ${sizeAndGrow}">\n`;
+    blocks.forEach(block => {
+        html += layout(block, nextDirection) + '\n';
+    });
+    html += '</div>';
     return html;
 }
 
@@ -118,29 +123,91 @@ function horSlice(source) {
     return blocks;    
 }
 
+function checkSeparator(source) {
+    const width = source[0].length * UNIT_LENGTH;
+    const height = source.length * UNIT_LENGTH;
+    const isSeparator = width > 0 && height > 0 && source.find(row => row.find(id => !!id)) === undefined;
+    let result;
+    if (isSeparator) {
+        result = {width, height};
+    }
+    return result;
+}
+
+function calcGrow(source, direction) {
+    // return blocks.map(block => {
+        let grows;
+        if (direction == 'row') {
+            grows = source.map(row => row.reduce((grow, id) => {
+                const info = blockInfo[id];
+                if (info && (info.type == 'hor' || info.type == 'all')) {
+                    grow++;
+                }
+                return grow;
+            }, 0));
+        } else if (direction == 'column') {
+            grows = [];
+            for (let col = 0, columns = source[0].length; col < columns; col++) {
+                let grow = 0;
+                for (let row = 0, rows = source.length; row < rows; row++) {
+                    const id = source[row][col];
+                    const info = blockInfo[id];
+                    if (!info) {
+                        continue;
+                    }
+                    if (info.type == 'ver' || info.type == 'all') {
+                        grow++;
+                    }
+                }
+                grows.push(grow);
+            }
+        }
+        if (!grows || grows.length == 0) {
+            grows = [0];
+        }
+        return Math.max(...grows);
+        // const grow = Math.max(...grows);
+        // return grow > 0 ? `flex-grow:${grow};` : '';
+    // });
+}
+
+function calcSizeAndGrow(source, direction) {
+    const grow = calcGrow(source, direction);
+
+    // return blocks.map((block, idx) => {
+        // const grow = grows[idx];
+        if (direction == 'row') {
+            return grow == 0 ? `width:${source[0].length * UNIT_LENGTH}px; height:100%;` :
+                `flex-grow:${grow}; height:100%;`;
+        } else if (direction == 'column') {
+            return grow == 0 ? `width:100%; height:${source.length * UNIT_LENGTH}px;` :
+                `width:100%; flex-grow:${grow};`;
+        } else {
+            return 'width:100%; height:100%;';
+        }
+    // });
+}
 
 
 //////////////////////////////////////////////////
 
 
 function prepare() {
-  source = source.replace(/    /g, '  ').split(/\n/g).slice(1, Infinity).map(row => row.split(/  /g));
-  source.splice(source.length - 1, 1);
-  source.forEach((row, top) => {
-    row.forEach((id, left) => {
-      let block = blockInfo[id];
-      if (!!block || !id) {
-        return;
-      }
-      blockInfo[id] = {
-        origin: {
-          width: row.filter(i => i === id).length,
-          height: source.filter(r => r[left] === id).length,
-          left: left, top: top, type: types[  source[top][left].match(/\w(\d+)/)[1]  ]
-        }
-      };
+    source = source.replace(/    /g, '  ').split(/\n/g).slice(1, Infinity).map(row => row.split(/  /g));
+    source.splice(source.length - 1, 1);
+    source.forEach((row, top) => {
+        row.forEach((id, left) => {
+            let block = blockInfo[id];
+            if (!!block || !id) {
+                return;
+            }
+            blockInfo[id] = {
+                width: row.filter(i => i === id).length,
+                height: source.filter(r => r[left] === id).length,
+                left: left, top: top, type: types[  source[top][left].match(/\w(\d+)/)[1]  ]
+            };
+        });
     });
-  });
 }
 
 
