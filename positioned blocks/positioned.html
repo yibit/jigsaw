@@ -4,22 +4,167 @@
 <meta charset="utf-8">
 <title>positioned blocks</title>
 </head>
+<style type="text/css">
+  .container {
+      display: flex;
+      width: 70%;
+      height: 200px;
+      background-color: blue;
+  }
+  .item {
+    width: 200px;
+  }
+</style>
 <body style="margin:0; padding:0; width: 100%; height: 100%;">
 
-<div style="display:flex;  width:100%; height:100%;">
-<div style="display:flex; flex-direction:column; width:90px; height:100%;">
-<div style="width:90px; height:120px; background-color:#FCF6CF;"></div>
-<div style="width:90px; height:30px"></div>
-<div style="width:90px; flex-grow:6; background-color:#7FFFD4;"></div>
+<div style="display:flex; flex-direction:column; width:100%; height:100%;">
+<div style="min-height:8px; max-height:8px; background-color: #ddd"></div>
+<div style="display:flex; flex-direction:row; width:100%; height:48px;">
+<div style="min-width:8px; max-width:8px; background-color: #ddd"></div>
+
+            <div style="width:296px; height:48px;">
+                <div style="width:100%; height:100%; background-color:#C2CDCD;">
+                    a0
+                </div>
+            </div>
+        
+<div style="min-width:8px; max-width:8px; background-color: #ddd"></div>
+
+            <div style="flex-basis:0; flex-grow:11; height:48px;">
+                <div style="width:100%; height:100%; background-color:#CDB79E;">
+                    b1
+                </div>
+            </div>
+        
+<div style="min-width:8px; max-width:8px; background-color: #ddd"></div>
+<div style="min-width:8px; max-width:8px; background-color: #ddd"></div>
+
+            <div style="width:72px; height:48px;">
+                <div style="width:100%; height:100%; background-color:#5F9EA0;">
+                    c0
+                </div>
+            </div>
+        
+<div style="min-width:8px; max-width:8px; background-color: #ddd"></div>
+
+            <div style="flex-basis:0; flex-grow:27; height:48px;">
+                <div style="width:100%; height:100%; background-color:#7FFFD4;">
+                    d1
+                </div>
+            </div>
+        
+<div style="min-width:8px; max-width:8px; background-color: #ddd"></div>
+
+            <div style="width:88px; height:48px;">
+                <div style="width:100%; height:100%; background-color:#98F5FF;">
+                    e0
+                </div>
+            </div>
+        
 </div>
-<div style="width:30px; height:330px"></div>
-<div style="display:flex; flex-direction:column; flex-grow:6; height:100%;">
-<div style="width:180px; height:120px; background-color:#66CDAA;"></div>
-<div style="width:180px; height:30px"></div>
-<div style="width:100%; height:180px; background-color:#8EE5EE;"></div>
+<div style="min-height:8px; max-height:8px; background-color: #ddd"></div>
+<div style="display:flex; flex-direction:row; width:100%; height:48px;">
+<div style="min-width:8px; max-width:8px; background-color: #ddd"></div>
+
+            <div style="width:96px; height:48px;">
+                <div style="width:100%; height:100%; background-color:#8B4513;">
+                    f0
+                </div>
+            </div>
+        
+<div style="min-width:8px; max-width:8px; background-color: #ddd"></div>
+
+            <div style="width:144px; height:48px;">
+                <div style="width:100%; height:100%; background-color:#FCF6CF;">
+                    g0
+                </div>
+            </div>
+        
+<div style="min-width:8px; max-width:8px; background-color: #ddd"></div>
+
+            <div style="flex-basis:0; flex-grow:18; height:48px;">
+                <div style="width:100%; height:100%; background-color:#66CDAA;">
+                    h1
+                </div>
+            </div>
+        
+<div style="min-width:8px; max-width:8px; background-color: #ddd"></div>
+
+            <div style="flex-basis:0; flex-grow:11; height:48px;">
+                <div style="width:100%; height:100%; background-color:#CDB79E;">
+                    i1
+                </div>
+            </div>
+        
+<div style="min-width:8px; max-width:8px; background-color: #ddd"></div>
+<div style="min-width:8px; max-width:8px; background-color: #ddd"></div>
+
+            <div style="width:184px; height:48px;">
+                <div style="width:100%; height:100%; background-color:#8EE5EE;">
+                    j0
+                </div>
+            </div>
+        
+<div style="min-width:8px; max-width:8px; background-color: #ddd"></div>
+<div style="min-width:8px; max-width:8px; background-color: #ddd"></div>
+
+            <div style="width:88px; height:48px;">
+                <div style="width:100%; height:100%; background-color:#D2691E;">
+                    k0
+                </div>
+            </div>
+        
 </div>
-<div style="width:30px; height:330px"></div>
-<div style="flex-grow:6; height:330px; background-color:#D2691E;"></div>
+<div style="min-height:8px; max-height:8px; background-color: #ddd"></div>
+<div style="display:flex; flex-direction:row; width:100%; flex-basis:0; flex-grow:73; height:0;">
+<div style="min-width:8px; max-width:8px; background-color: #ddd"></div>
+
+            <div style="width:200px; height:100%;">
+                <div style="width:100%; height:100%; background-color:#458B00;">
+                    l2
+                </div>
+            </div>
+        
+<div style="min-width:8px; max-width:8px; background-color: #ddd"></div>
+<div style="display:flex; flex-direction:column; flex-basis:0; flex-grow:74; height:100%;">
+<div style="display:flex; flex-direction:row; width:100%; height:184px;">
+
+            <div style="width:224px; height:184px;">
+                <div style="width:100%; height:100%; background-color:#98F5FF;">
+                    m0
+                </div>
+            </div>
+        
+<div style="min-width:8px; max-width:8px; background-color: #ddd"></div>
+
+            <div style="flex-basis:0; flex-grow:45; height:184px;">
+                <div style="width:100%; height:100%; background-color:#5F9EA0;">
+                    n1
+                </div>
+            </div>
+        
+</div>
+<div style="min-height:8px; max-height:8px; background-color: #ddd"></div>
+
+            <div style="width:100%; flex-basis:0; flex-grow:49; height:0;">
+                <div style="width:100%; height:100%; background-color:#7AC5CD;">
+                    o3
+                </div>
+            </div>
+        
+</div>
+</div>
+<div style="min-height:8px; max-height:8px; background-color: #ddd"></div>
+<div style="display:flex; flex-direction:row; width:100%; height:32px;">
+<div style="min-width:8px; max-width:8px; background-color: #ddd"></div>
+
+            <div style="flex-basis:0; flex-grow:100; height:32px;">
+                <div style="width:100%; height:100%; background-color:#5F9EA0;">
+                    p1
+                </div>
+            </div>
+        
+</div>
 </div>
 
 </body>
