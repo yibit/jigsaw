@@ -8,11 +8,11 @@ const colors = [
   'CD661D', '8B4513'
 ]
 
-const types = {
-    0: 'fixed', 1: 'hor', 2: 'ver', 3: 'all'
+const scaleDirections = {
+    0: 'none', 1: 'hor', 2: 'ver', 3: 'both'
 }
 
-let blockInfo = {}
+const svds = [];
 
 let source = `
                                                                                                                                                                                                                                                                                                                                                                                                                 
@@ -109,15 +109,52 @@ let source = `
     p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1
     p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1
 `
-///////////////////////////////////////////////////////////
-const UNIT_LENGTH = 8;
-prepare();
-console.log(source);
-console.log(blockInfo);
-toHtml(layout(source));
 
-function layout(source, direction) {
-    const separator = checkSeparator(source);
+
+function toSvdList(source) {
+    source = source.replace(/    /g, '  ').split(/\n/g).slice(1, Infinity).map(row => row.split(/  /g));
+    source.splice(source.length - 1, 1);
+    source.forEach((row, top) => {
+        row.forEach((id, left) => {
+            if (!id || svds.find(svd => svd.id === id)) {
+                return;
+            }
+            const tmp = source.filter(r => r.find(c => c === id)).map(r => r.filter(c => c === id));
+            const scaleDirection = scaleDirections[id.match(/\w(\d+)/)[1]];
+            svds.push({
+                id, left, top, scaleDirection,
+                width: tmp[0].length, height: tmp.length
+            });
+        });
+    });
+}
+
+
+function toHtml(html) {
+    document.body.innerHTML = html;
+    // console.log(html);
+}
+
+function random(max) {
+    return Math.round(Math.random() * max)
+}
+
+toSvdList(source)
+console.log(svds);
+
+
+// 以上代码实际运行时用不到
+///////////////////////////////////////////////////////////
+
+
+
+
+const UNIT_LENGTH = 8;
+const matrix = toMatrix(svds);
+toHtml(layout(matrix));
+
+function layout(matrix, direction) {
+    const separator = checkSeparator(matrix);
     if (separator) {
         const size = direction == 'column' ?
             `min-height:${separator.height}px; max-height:${separator.height}px;` :
@@ -125,16 +162,16 @@ function layout(source, direction) {
         return `<div style="${size} background-color: #ddd"></div>`;
     }
 
-    const [blocks, childDirection] = slice(source);
+    const [blocks, childDirection] = slice(matrix);
     const slicable = blocks.length > 1;
-    let sizeAndGrow = calcSizeAndGrow(source, direction, slicable);
+    let sizeAndGrow = calcSizeAndGrow(matrix, direction, slicable);
 
     if (!slicable) {
         // 切到只剩下一块了
         return `
             <div style="${sizeAndGrow}">
                 <div style="width:100%; height:100%; background-color:#${colors[random(colors.length-1)]};">
-                    ${source[0][0]}
+                    ${matrix[0][0].id}
                 </div>
             </div>
         `;
@@ -149,28 +186,28 @@ function layout(source, direction) {
     return html;
 }
 
-function slice(source) {
-    const verBlocks = verSlice(source);
-    const horBlocks = horSlice(source);
+function slice(matrix) {
+    const verBlocks = verSlice(matrix);
+    const horBlocks = horSlice(matrix);
     if (verBlocks.length == 1 && horBlocks.length == 1) {
-        return [[source], ''];
+        return [[matrix], ''];
     }
     const blocks = verBlocks.length >= horBlocks.length ? verBlocks : horBlocks;
     const direction = verBlocks.length >= horBlocks.length ? 'row' : 'column';
     return [blocks, direction];
 }
 
-function verSlice(source) {
+function verSlice(matrix) {
     const borders = [];
-    const columns = source[0].length;
+    const columns = matrix[0].length;
     for (let col = 1; col < columns; col++) {
-        const found = source.find(row => !!row[col] && row[col] === row[col-1]);
+        const found = matrix.find(row => !!row[col] && row[col] === row[col-1]);
         if (!found) {
             borders.push(col);
         }
     }
     if (borders.length == 0) {
-        return [source];
+        return [matrix];
     }
 
     borders.unshift(0);
@@ -181,49 +218,49 @@ function verSlice(source) {
             return;
         }
         const end = borders[idx + 1];
-        const block = source.map(row => row.slice(start, end));
+        const block = matrix.map(row => row.slice(start, end));
         blocks.push(block);
     });
 
     return blocks;
 }
 
-function horSlice(source) {
+function horSlice(matrix) {
     const borders = [];
-    source.forEach((row, rowIdx) => {
+    matrix.forEach((row, rowIdx) => {
         if (rowIdx == 0) {
             return;
         }
-        const lastRow = source[rowIdx - 1];
-        const found = row.find((id, colIdx) => !!id && id === lastRow[colIdx]);
+        const lastRow = matrix[rowIdx - 1];
+        const found = row.find((svd, colIdx) => !!svd && svd === lastRow[colIdx]);
         if (!found) {
             borders.push(rowIdx);
         }
     });
     if (borders.length == 0) {
-        return [source];
+        return [matrix];
     }
 
     borders.unshift(0);
-    borders.push(source.length);
+    borders.push(matrix.length);
 
     const blocks = [];
     borders.forEach((start, idx) => {
-        if (start === source.length) {
+        if (start === matrix.length) {
             return;
         }
         const end = borders[idx + 1];
-        const block = source.slice(start, end);
+        const block = matrix.slice(start, end);
         blocks.push(block);
     });
 
     return blocks;    
 }
 
-function checkSeparator(source) {
-    const width = source[0].length * UNIT_LENGTH;
-    const height = source.length * UNIT_LENGTH;
-    const isSeparator = width > 0 && height > 0 && source.find(row => row.find(id => !!id)) === undefined;
+function checkSeparator(matrix) {
+    const width = matrix[0].length * UNIT_LENGTH;
+    const height = matrix.length * UNIT_LENGTH;
+    const isSeparator = width > 0 && height > 0 && matrix.find(row => row.find(svd => !!svd)) === undefined;
     let result;
     if (isSeparator) {
         result = {width, height};
@@ -236,15 +273,15 @@ function containsMultipleBlocks(block) {
     return block.find(row => row.find(id => id !== target));
 }
 
-function calcSizeAndGrow(source, direction, slicable) {
-    const grow = calcGrow(source, direction);
-    const physicalSize = !slicable ? calcPhysicalSize(source) : {width: '100%', height: '100%'};
+function calcSizeAndGrow(matrix, direction, slicable) {
+    const grow = calcGrow(matrix, direction);
+    const physicalSize = !slicable ? calcPhysicalSize(matrix) : {width: '100%', height: '100%'};
 
     if (direction == 'row') {
-        return grow == 0 ? `width:${source[0].length * UNIT_LENGTH}px; height:${physicalSize.height};` :
+        return grow == 0 ? `width:${matrix[0].length * UNIT_LENGTH}px; height:${physicalSize.height};` :
             `flex-basis:0; flex-grow:${grow}; height:${physicalSize.height};`;
     } else if (direction == 'column') {
-        return grow == 0 ? `width:${physicalSize.width}; height:${source.length * UNIT_LENGTH}px;` :
+        return grow == 0 ? `width:${physicalSize.width}; height:${matrix.length * UNIT_LENGTH}px;` :
             // 这里的 height:0 是为了解决chrome的bug
             `width:${physicalSize.width}; flex-basis:0; flex-grow:${grow}; height:0;`;
     } else {
@@ -252,27 +289,25 @@ function calcSizeAndGrow(source, direction, slicable) {
     }
 }
 
-function calcGrow(source, direction) {
+function calcGrow(matrix, direction) {
     let grows;
     if (direction == 'row') {
-        grows = source.map(row => row.reduce((grow, id) => {
-            const info = blockInfo[id];
-            if (info && (info.type == 'hor' || info.type == 'all')) {
+        grows = matrix.map(row => row.reduce((grow, svd) => {
+            if (svd && (svd.scaleDirection == 'hor' || svd.scaleDirection == 'both')) {
                 grow++;
             }
             return grow;
         }, 0));
     } else if (direction == 'column') {
         grows = [];
-        for (let col = 0, columns = source[0].length; col < columns; col++) {
+        for (let col = 0, columns = matrix[0].length; col < columns; col++) {
             let grow = 0;
-            for (let row = 0, rows = source.length; row < rows; row++) {
-                const id = source[row][col];
-                const info = blockInfo[id];
-                if (!info) {
+            for (let row = 0, rows = matrix.length; row < rows; row++) {
+                const svd = matrix[row][col];
+                if (!svd) {
                     continue;
                 }
-                if (info.type == 'ver' || info.type == 'all') {
+                if (svd.scaleDirection == 'ver' || svd.scaleDirection == 'both') {
                     grow++;
                 }
             }
@@ -286,54 +321,43 @@ function calcGrow(source, direction) {
 }
 
 // 计算单区块的物理尺寸，只用于计算不可切分区块。
-function calcPhysicalSize(source) {
-    if (containsMultipleBlocks(source)) {
+function calcPhysicalSize(matrix) {
+    if (containsMultipleBlocks(matrix)) {
         // 包含多个不同块，且不能再切分，我们只能无视其延展性，认为它是固定尺寸
         return {
-            width: `${source[0].length * UNIT_LENGTH}px`,
-            height: `${source.length * UNIT_LENGTH}px`
+            width: `${matrix[0].length * UNIT_LENGTH}px`,
+            height: `${matrix.length * UNIT_LENGTH}px`
         };
     } else {
-        const id = source[0][0];
-        const scaleType = blockInfo[id].type;
+        const svd = matrix[0][0];
+        const scaleDirection = svd.scaleDirection;
         return {
-            width: scaleType == 'fixed' || scaleType == 'ver' ?
-                `${source[0].length * UNIT_LENGTH}px` : '100%',
-            height: scaleType == 'fixed' || scaleType == 'hor' ?
-                `${source.length * UNIT_LENGTH}px` : '100%'
+            width: scaleDirection == 'none' || scaleDirection == 'ver' ?
+                `${matrix[0].length * UNIT_LENGTH}px` : '100%',
+            height: scaleDirection == 'none' || scaleDirection == 'hor' ?
+                `${matrix.length * UNIT_LENGTH}px` : '100%'
         }
     }
 }
 
-
-//////////////////////////////////////////////////
-
-
-function prepare() {
-    source = source.replace(/    /g, '  ').split(/\n/g).slice(1, Infinity).map(row => row.split(/  /g));
-    source.splice(source.length - 1, 1);
-    source.forEach((row, top) => {
-        row.forEach((id, left) => {
-            let block = blockInfo[id];
-            if (!!block || !id) {
-                return;
-            }
-            blockInfo[id] = {
-                width: row.filter(i => i === id).length,
-                height: source.filter(r => r[left] === id).length,
-                left: left, top: top, type: types[  source[top][left].match(/\w(\d+)/)[1]  ]
-            };
-        });
+function toMatrix(svds) {
+    let width = 0, height = 0;
+    svds.forEach(svd => {
+        width = Math.max(svd.left + svd.width, width);
+        height = Math.max(svd.top + svd.height, height);
     });
+    const matrix = [];
+    for (let row = 0; row < height; row++) {
+        matrix[row] = [];
+        for (let col = 0; col < width; col++) {
+            const svd = svds.find(svd => {
+                return (row >= svd.top && row < svd.top + svd.height) &&
+                    (col >= svd.left && col < svd.left + svd.width);
+            });
+            matrix[row][col] = svd ? svd : null;
+        }
+    }
+    return matrix;
 }
 
-
-function toHtml(html) {
-    document.body.innerHTML = html;
-    console.log(html);
-}
-
-function random(max) {
-    return Math.round(Math.random() * max)
-}
 
