@@ -30,29 +30,29 @@ let source = `
     f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0      g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
     f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0      g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
                                                                                                                                                                                                                                                                                                                                                                                                                 
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1  n1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1                                                              q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0                                                                  t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
+    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
     l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2                                                                                                                                                                                                                                                                                                          
     l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
     l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
@@ -121,12 +121,18 @@ function toSvdList(source) {
             }
             const tmp = source.filter(r => r.find(c => c === id)).map(r => r.filter(c => c === id));
             const scaleDirection = scaleDirections[id.match(/\w(\d+)/)[1]];
-            svds.push({
-                id, left, top, scaleDirection,
-                width: tmp[0].length, height: tmp.length
-            });
+            const layout = { left, top, scaleDirection, width: tmp[0].length, height: tmp.length };
+            svds.push({id, layout, htmlCoder});
         });
     });
+}
+
+function htmlCoder() {
+    return `
+        <div style="width:100%; height:100%; background-color:#${colors[random(colors.length-1)]};">
+            ${this.id}
+        </div>
+    `;
 }
 
 
@@ -151,6 +157,7 @@ console.log(svds);
 
 const UNIT_LENGTH = 8;
 const matrix = toMatrix(svds);
+removeUnslicablesScalability(matrix);
 toHtml(layout(matrix));
 
 function layout(matrix, direction) {
@@ -167,14 +174,8 @@ function layout(matrix, direction) {
     let sizeAndGrow = calcSizeAndGrow(matrix, direction, slicable);
 
     if (!slicable) {
-        // 切到只剩下一块了
-        return `
-            <div style="${sizeAndGrow}">
-                <div style="width:100%; height:100%; background-color:#${colors[random(colors.length-1)]};">
-                    ${matrix[0][0].id}
-                </div>
-            </div>
-        `;
+        // 无法继续切下去，此时可能是只剩下一块了，也可能剩下多块
+        return layoutUnslicable(matrix, sizeAndGrow);
     }
 
     const flexDirection = !!childDirection ? `flex-direction:${childDirection};` : '';
@@ -184,6 +185,51 @@ function layout(matrix, direction) {
     });
     html += '</div>';
     return html;
+}
+
+function layoutUnslicable(matrix, sizeAndGrow) {
+    let html;
+    if (containsMultipleBlocks(matrix)) {
+        // 不止一块，那就无视尺寸的响应性，直接生成绝对布局代码了
+        const processedSvds = [];
+        html = `<div style="position:relative; width:100%; height:100%;">\n`;
+        // 从左到右，从上到下遍历，在某个坐标下每发现一个新的svd，则此坐标必然是该svd的左上角坐标
+        matrix.forEach((row, top) => {
+            row.forEach((svd, left) => {
+                if (!svd || processedSvds.find(s => s === svd)) {
+                    return;
+                }
+                const width = svd.layout.width * UNIT_LENGTH, height = svd.layout.height * UNIT_LENGTH;
+                const leftPx = left * UNIT_LENGTH, topPx = top * UNIT_LENGTH;
+                const css = `width:${width}px; height:${height}px; left:${leftPx}px; top:${topPx}px;`;
+                html += `
+                    <div style="position:absolute; ${css}">
+                        ${svd.htmlCoder.apply(svd)}
+                    </div>
+                `;
+                processedSvds.push(svd);
+            });
+        });
+        html += `</div>`;
+    } else {
+        // 只有一块，那就不需要生成绝对布局代码了
+        const svd = matrix[0][0];
+        html = svd.htmlCoder.apply(svd);
+    }
+    return `<div style="${sizeAndGrow}">\n${html}\n</div>`;
+}
+
+// 将包含多个独立块且无法切分的所有块的响应性去掉
+function removeUnslicablesScalability(matrix) {
+    const [blocks, ] = slice(matrix);
+    if (blocks.length > 1) {
+        blocks.forEach(b => removeUnslicablesScalability(b));
+        return;
+    }
+    if (!containsMultipleBlocks(matrix)) {
+        return;
+    }
+    matrix.forEach(row => row.forEach(svd => svd && (svd.layout.scaleDirection = 'none')));
 }
 
 function slice(matrix) {
@@ -268,13 +314,13 @@ function checkSeparator(matrix) {
     return result;
 }
 
-function containsMultipleBlocks(block) {
-    const target = block[0][0];
-    return block.find(row => row.find(id => id !== target));
+function containsMultipleBlocks(matrix) {
+    const target = matrix[0][0];
+    return matrix.find(row => row.find(id => id !== target));
 }
 
 function calcSizeAndGrow(matrix, direction, slicable) {
-    const grow = calcGrow(matrix, direction);
+    const grow = calcGrow(matrix, direction, slicable);
     const physicalSize = !slicable ? calcPhysicalSize(matrix) : {width: '100%', height: '100%'};
 
     if (direction == 'row') {
@@ -289,11 +335,19 @@ function calcSizeAndGrow(matrix, direction, slicable) {
     }
 }
 
-function calcGrow(matrix, direction) {
+function calcGrow(matrix, direction, slicable) {
+    if (!slicable && containsMultipleBlocks(matrix)) {
+        return 0;
+    }
+
     let grows;
     if (direction == 'row') {
         grows = matrix.map(row => row.reduce((grow, svd) => {
-            if (svd && (svd.scaleDirection == 'hor' || svd.scaleDirection == 'both')) {
+            if (!svd) {
+                return grow;
+            }
+            const scaleDirection = svd.layout.scaleDirection;
+            if (scaleDirection == 'hor' || scaleDirection == 'both') {
                 grow++;
             }
             return grow;
@@ -307,7 +361,8 @@ function calcGrow(matrix, direction) {
                 if (!svd) {
                     continue;
                 }
-                if (svd.scaleDirection == 'ver' || svd.scaleDirection == 'both') {
+                const scaleDirection = svd.layout.scaleDirection;
+                if (scaleDirection == 'ver' || scaleDirection == 'both') {
                     grow++;
                 }
             }
@@ -330,7 +385,7 @@ function calcPhysicalSize(matrix) {
         };
     } else {
         const svd = matrix[0][0];
-        const scaleDirection = svd.scaleDirection;
+        const scaleDirection = svd.layout.scaleDirection;
         return {
             width: scaleDirection == 'none' || scaleDirection == 'ver' ?
                 `${matrix[0].length * UNIT_LENGTH}px` : '100%',
@@ -343,16 +398,16 @@ function calcPhysicalSize(matrix) {
 function toMatrix(svds) {
     let width = 0, height = 0;
     svds.forEach(svd => {
-        width = Math.max(svd.left + svd.width, width);
-        height = Math.max(svd.top + svd.height, height);
+        width = Math.max(svd.layout.left + svd.layout.width, width);
+        height = Math.max(svd.layout.top + svd.layout.height, height);
     });
     const matrix = [];
     for (let row = 0; row < height; row++) {
         matrix[row] = [];
         for (let col = 0; col < width; col++) {
             const svd = svds.find(svd => {
-                return (row >= svd.top && row < svd.top + svd.height) &&
-                    (col >= svd.left && col < svd.left + svd.width);
+                return (row >= svd.layout.top && row < svd.layout.top + svd.layout.height) &&
+                    (col >= svd.layout.left && col < svd.layout.left + svd.layout.width);
             });
             matrix[row][col] = svd ? svd : null;
         }
