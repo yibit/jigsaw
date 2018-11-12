@@ -15,99 +15,21 @@ const scaleDirections = {
 const svds = [];
 
 let source = `
-                                                                                                                                                                                                                                                                                                                                                                                                                
-    a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0      b1  b1  b1  b1  b1  b1  b1  b1  b1  b1  b1          c0  c0  c0  c0  c0  c0  c0  c0  c0      d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1      e0  e0  e0  e0  e0  e0  e0  e0  e0  e0  e0
-    a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0      b1  b1  b1  b1  b1  b1  b1  b1  b1  b1  b1          c0  c0  c0  c0  c0  c0  c0  c0  c0      d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1      e0  e0  e0  e0  e0  e0  e0  e0  e0  e0  e0
-    a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0      b1  b1  b1  b1  b1  b1  b1  b1  b1  b1  b1          c0  c0  c0  c0  c0  c0  c0  c0  c0      d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1      e0  e0  e0  e0  e0  e0  e0  e0  e0  e0  e0
-    a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0      b1  b1  b1  b1  b1  b1  b1  b1  b1  b1  b1          c0  c0  c0  c0  c0  c0  c0  c0  c0      d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1      e0  e0  e0  e0  e0  e0  e0  e0  e0  e0  e0
-    a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0      b1  b1  b1  b1  b1  b1  b1  b1  b1  b1  b1          c0  c0  c0  c0  c0  c0  c0  c0  c0      d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1      e0  e0  e0  e0  e0  e0  e0  e0  e0  e0  e0
-    a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0      b1  b1  b1  b1  b1  b1  b1  b1  b1  b1  b1          c0  c0  c0  c0  c0  c0  c0  c0  c0      d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1      e0  e0  e0  e0  e0  e0  e0  e0  e0  e0  e0
-                                                                                                                                                                                                                                                                                                                                                                                                                
-    f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0      g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
-    f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0      g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
-    f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0      g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
-    f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0      g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
-    f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0      g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
-    f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0      g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
-                                                                                                                                                                                                                                                                                                                                                                                                                
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1                                                              q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      s0  s0  s0  s0  s0  s0      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0                                                                  t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1  u1      t2  t2  t2  t2  t2  t2      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2                                                                                                                                                                                                                                                                                                          
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-    l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3  o3
-                                                                                                                                                                                                                                                                                                                                                                                                                
-    p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1
-    p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1
-    p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1
-    p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1  p1
+a0  a0  a0      b0  b0  b0  b0  b0  b0                                                  g0  g0  g0  g0  i1  i1  i1  i1  i1
+a0  a0  a0      b0  b0  b0  b0  b0  b0                                                  g0  g0  g0  g0  i1  i1  i1  i1  i1
+a0  a0  a0      b0  b0  b0  b0  b0  b0                                                  g0  g0  g0  g0  i1  i1  i1  i1  i1
+a0  a0  a0      b0  b0  b0  b0  b0  b0          e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  g0  g0  i1  i1  i1  i1  i1
+                                                e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  g0  g0  i1  i1  i1  i1  i1
+c2  c2  c2      d2  d2  d2  d2  d2  d2      h3  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  g0  g0  i1  i1  i1  i1  i1
+c2  c2  c2      d2  d2  d2  d2  d2  d2      h3  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  e1  g0  g0  i1  i1  i1  i1  i1
+c2  c2  c2      d2  d2  d2  d2  d2  d2      h3  h3  h3  h3  h3  h3  h3  h3  h3          g0  g0  g0  g0  i1  i1  i1  i1  i1
+c2  c2  c2      d2  d2  d2  d2  d2  d2      h3  h3  h3  h3  h3  h3  h3  h3  h3          g0  g0  g0  g0  i1  i1  i1  i1  i1
+c2  c2  c2      d2  d2  d2  d2  d2  d2      h3  h3  h3  h3  h3  h3  h3  h3  h3          g0  g0  g0  g0  i1  i1  i1  i1  i1
+c2  c2  c2      d2  d2  d2  d2  d2  d2      h3  h3  h3  h3  h3  h3  h3  h3  h3          g0  g0  g0  g0  i1  i1  i1  i1  i1
+                                                                                        g0  g0  g0  g0  i1  i1  i1  i1  i1
+f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3          g0  g0  g0  g0  i1  i1  i1  i1  i1
+f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3          g0  g0  g0  g0  i1  i1  i1  i1  i1
+f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3  f3          g0  g0  g0  g0  i1  i1  i1  i1  i1
 `
 
 
@@ -135,7 +57,6 @@ function htmlCoder() {
     `;
 }
 
-
 function toHtml(html) {
     document.body.innerHTML = html;
     // console.log(html);
@@ -146,6 +67,7 @@ function random(max) {
 }
 
 toSvdList(source)
+svds.find(svd => svd.id === 'h3').layout.width = 9;
 console.log(svds);
 
 
@@ -155,7 +77,7 @@ console.log(svds);
 
 
 
-const UNIT_LENGTH = 8;
+const UNIT_LENGTH = 24;
 const matrix = toMatrix(svds);
 removeUnslicablesScalability(matrix);
 toHtml(layout(matrix));
@@ -199,12 +121,12 @@ function layoutUnslicable(matrix, sizeAndGrow) {
                 if (!svd || processedSvds.find(s => s === svd)) {
                     return;
                 }
-                const width = svd.layout.width * UNIT_LENGTH, height = svd.layout.height * UNIT_LENGTH;
+                const width = svd.width * UNIT_LENGTH, height = svd.height * UNIT_LENGTH;
                 const leftPx = left * UNIT_LENGTH, topPx = top * UNIT_LENGTH;
                 const css = `width:${width}px; height:${height}px; left:${leftPx}px; top:${topPx}px;`;
                 html += `
                     <div style="position:absolute; ${css}">
-                        ${svd.htmlCoder.apply(svd)}
+                        ${svd.origin.htmlCoder.apply(svd.origin)}
                     </div>
                 `;
                 processedSvds.push(svd);
@@ -214,7 +136,7 @@ function layoutUnslicable(matrix, sizeAndGrow) {
     } else {
         // 只有一块，那就不需要生成绝对布局代码了
         const svd = matrix[0][0];
-        html = svd.htmlCoder.apply(svd);
+        html = svd.origin.htmlCoder.apply(svd.origin);
     }
     return `<div style="${sizeAndGrow}">\n${html}\n</div>`;
 }
@@ -229,7 +151,7 @@ function removeUnslicablesScalability(matrix) {
     if (!containsMultipleBlocks(matrix)) {
         return;
     }
-    matrix.forEach(row => row.forEach(svd => svd && (svd.layout.scaleDirection = 'none')));
+    matrix.forEach(row => row.forEach(svd => svd && (svd.scaleDirection = 'none')));
 }
 
 function slice(matrix) {
@@ -247,7 +169,9 @@ function verSlice(matrix) {
     const borders = [];
     const columns = matrix[0].length;
     for (let col = 1; col < columns; col++) {
-        const found = matrix.find(row => !!row[col] && row[col] === row[col-1]);
+        // 如果能找到这样的一行：它在col处左右两边的值相等，或者在该位置上有重叠，则位置col不是一个边
+        const found = matrix.find((rowArr, row) =>
+            !!rowArr[col] && rowArr[col] === rowArr[col-1] || isOverlapped(row, col));
         if (!found) {
             borders.push(col);
         }
@@ -278,7 +202,9 @@ function horSlice(matrix) {
             return;
         }
         const lastRow = matrix[rowIdx - 1];
-        const found = row.find((svd, colIdx) => !!svd && svd === lastRow[colIdx]);
+        // 如果能找到这样的一列：它在rowIdx处上下两边的值相等，或者在该位置上有重叠，则位置rowIdx不是一个边
+        const found = row.find((svd, colIdx) =>
+            !!svd && svd === lastRow[colIdx] || isOverlapped(rowIdx, colIdx));
         if (!found) {
             borders.push(rowIdx);
         }
@@ -303,6 +229,14 @@ function horSlice(matrix) {
     return blocks;    
 }
 
+function isOverlapped(row, col) {
+    // 注意这里的svds是原始的，和matrix里的不一样
+    return svds.reduce((sum, svd) => {
+        return (svd.layout.left <= col && svd.layout.left + svd.layout.width > col) &&
+            (svd.layout.top <= row && svd.layout.top + svd.layout.height > row)
+    }, 0) > 1;
+}
+
 function checkSeparator(matrix) {
     const width = matrix[0].length * UNIT_LENGTH;
     const height = matrix.length * UNIT_LENGTH;
@@ -316,7 +250,7 @@ function checkSeparator(matrix) {
 
 function containsMultipleBlocks(matrix) {
     const target = matrix[0][0];
-    return matrix.find(row => row.find(id => id !== target));
+    return matrix.find(row => row.find(svd => svd !== target));
 }
 
 function calcSizeAndGrow(matrix, direction, slicable) {
@@ -346,7 +280,7 @@ function calcGrow(matrix, direction, slicable) {
             if (!svd) {
                 return grow;
             }
-            const scaleDirection = svd.layout.scaleDirection;
+            const scaleDirection = svd.scaleDirection;
             if (scaleDirection == 'hor' || scaleDirection == 'both') {
                 grow++;
             }
@@ -361,7 +295,7 @@ function calcGrow(matrix, direction, slicable) {
                 if (!svd) {
                     continue;
                 }
-                const scaleDirection = svd.layout.scaleDirection;
+                const scaleDirection = svd.scaleDirection;
                 if (scaleDirection == 'ver' || scaleDirection == 'both') {
                     grow++;
                 }
@@ -385,7 +319,7 @@ function calcPhysicalSize(matrix) {
         };
     } else {
         const svd = matrix[0][0];
-        const scaleDirection = svd.layout.scaleDirection;
+        const scaleDirection = svd.scaleDirection;
         return {
             width: scaleDirection == 'none' || scaleDirection == 'ver' ?
                 `${matrix[0].length * UNIT_LENGTH}px` : '100%',
@@ -395,20 +329,28 @@ function calcPhysicalSize(matrix) {
     }
 }
 
+function simplyAndCopy(svds) {
+    return svds.map(svd => ({
+        left: svd.layout.left, top: svd.layout.top,
+        width: svd.layout.width, height: svd.layout.height,
+        scaleDirection: svd.layout.scaleDirection, origin: svd
+    }));
+}
+
 function toMatrix(svds) {
     let width = 0, height = 0;
-    svds.forEach(svd => {
-        width = Math.max(svd.layout.left + svd.layout.width, width);
-        height = Math.max(svd.layout.top + svd.layout.height, height);
+    const simplifiedSvds = simplyAndCopy(svds);
+    simplifiedSvds.forEach(svd => {
+        width = Math.max(svd.left + svd.width, width);
+        height = Math.max(svd.top + svd.height, height);
     });
     const matrix = [];
     for (let row = 0; row < height; row++) {
         matrix[row] = [];
         for (let col = 0; col < width; col++) {
-            const svd = svds.find(svd => {
-                return (row >= svd.layout.top && row < svd.layout.top + svd.layout.height) &&
-                    (col >= svd.layout.left && col < svd.layout.left + svd.layout.width);
-            });
+            const svd = simplifiedSvds.find(svd =>
+                (row >= svd.top && row < svd.top + svd.height) &&
+                    (col >= svd.left && col < svd.left + svd.width));
             matrix[row][col] = svd ? svd : null;
         }
     }
