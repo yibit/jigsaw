@@ -67,7 +67,6 @@ function random(max) {
 }
 
 toSvdList(source)
-svds.find(svd => svd.id === 'h3').layout.width = 9;
 console.log(svds);
 
 
@@ -169,9 +168,8 @@ function verSlice(matrix) {
     const borders = [];
     const columns = matrix[0].length;
     for (let col = 1; col < columns; col++) {
-        // 如果能找到这样的一行：它在col处左右两边的值相等，或者在该位置上有重叠，则位置col不是一个边
-        const found = matrix.find((rowArr, row) =>
-            !!rowArr[col] && rowArr[col] === rowArr[col-1] || isOverlapped(row, col));
+        // 如果能找到这样的一行：它在col处左右两边的值相等，则位置col不是一个边
+        const found = matrix.find(row => !!row[col] && row[col] === row[col-1]);
         if (!found) {
             borders.push(col);
         }
@@ -202,9 +200,8 @@ function horSlice(matrix) {
             return;
         }
         const lastRow = matrix[rowIdx - 1];
-        // 如果能找到这样的一列：它在rowIdx处上下两边的值相等，或者在该位置上有重叠，则位置rowIdx不是一个边
-        const found = row.find((svd, colIdx) =>
-            !!svd && svd === lastRow[colIdx] || isOverlapped(rowIdx, colIdx));
+        // 如果能找到这样的一列：它在rowIdx处上下两边的值相等，则位置rowIdx不是一个边
+        const found = row.find((svd, colIdx) => !!svd && svd === lastRow[colIdx]);
         if (!found) {
             borders.push(rowIdx);
         }
@@ -227,14 +224,6 @@ function horSlice(matrix) {
     });
 
     return blocks;    
-}
-
-function isOverlapped(row, col) {
-    // 注意这里的svds是原始的，和matrix里的不一样
-    return svds.reduce((sum, svd) => {
-        return (svd.layout.left <= col && svd.layout.left + svd.layout.width > col) &&
-            (svd.layout.top <= row && svd.layout.top + svd.layout.height > row)
-    }, 0) > 1;
 }
 
 function checkSeparator(matrix) {
