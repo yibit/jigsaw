@@ -52,11 +52,8 @@ function findAttribute(input, from) {
         if (input[i] == '=') {
             var name = input.slice(from, i);
             var quoteStart = findQuoteStart(input, i);
-            if (quoteStart) {
-
-            }
-            var endIndex = quoteStart ? findQuoteEnd(input, quoteStart.index, quoteStart.quote) : ;
-            var value = input.slice(i + 1, endIndex);
+            var endIndex = quoteStart ? findQuoteEnd(input, quoteStart.index, quoteStart.quote) : i;
+            var value = quoteStart ? input.slice(i + 1, endIndex) : undefined;
             return {name: name, value: value, startIndex: from, endIndex: endIndex};
         } else if (input[i] == '>') {
             var name = input.slice(from, i);
@@ -79,6 +76,9 @@ function findAttributeNameEnd(input, from) {
 
 function findQuoteStart(input, from) {
     for (var i = from; i < input.length; i++) {
+        if (input[i] == '>') {
+            return null;
+        }
         if (input[i].match(/"|'/)) {
             return {index: i, quote: input[i]};
         }
