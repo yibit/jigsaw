@@ -135,7 +135,7 @@ function htmlCoder() {
     `;
 }
 
-function toHtml(html) {
+function showHtml(html) {
     document.body.innerHTML = html;
     // console.log(html);
 }
@@ -176,14 +176,39 @@ console.log(svds);
 
 
 const UNIT_LENGTH = 8;
-let copiedSvds = simplifyAndCopy(svds);
-regroupOverlaps(copiedSvds);
-console.log('after regroup:', copiedSvds);
-const matrix = toMatrix(copiedSvds);
-removeUnslicablesScalability(matrix);
-toHtml(layout(matrix));
+const html = scalableLayout(svds);
+// const html = absoluteLayout(svds);
+showHtml(html);
 
-function layout(matrix, direction) {
+function scalableLayout(svds) {
+    let copiedSvds = simplifyAndCopy(svds);
+    regroupOverlaps(copiedSvds);
+    console.log('after regroup:', copiedSvds);
+    const matrix = toMatrix(copiedSvds);
+    removeUnslicablesScalability(matrix);
+    return scalableLayoutDo(matrix);
+}
+
+// 无视尺寸的响应性，直接生成绝对布局代码了，无论是否可以再切分的块，都可以采用这个方式布局
+function absoluteLayout(svds) {
+    const copiedSvds = simplifyAndCopy(svds);
+
+    let left = Infinity, top = Infinity;
+    copiedSvds.forEach(svd => {
+        left = Math.min(svd.left, left);
+        top = Math.min(svd.top, top);
+    });
+
+    let html = `<div style="position:relative; width:100%; height:100%;">\n`;
+    copiedSvds.forEach(svd => {
+        html += getAbsoluteDiv(svd, svd.left - left, svd.top - top, svd.width, svd.height);
+    });
+    html += `</div>`;
+
+    return html;
+}
+
+function scalableLayoutDo(matrix, direction) {
     const separator = checkSeparator(matrix);
     if (separator) {
         const size = direction == 'column' ?
@@ -204,28 +229,9 @@ function layout(matrix, direction) {
     const flexDirection = !!childDirection ? `flex-direction:${childDirection};` : '';
     let html = `<div style="display:flex; ${flexDirection} ${sizeAndGrow}">\n`;
     blocks.forEach(block => {
-        html += layout(block, childDirection) + '\n';
+        html += scalableLayoutDo(block, childDirection) + '\n';
     });
     html += '</div>';
-    return html;
-}
-
-// 无视尺寸的响应性，直接生成绝对布局代码了，无论是否可以再切分的块，都可以采用这个方式布局
-function absoluteLayout(svds) {
-    const copiedSvds = simplifyAndCopy(svds);
-
-    let left = Infinity, top = Infinity;
-    copiedSvds.forEach(svd => {
-        left = Math.min(svd.left, left);
-        top = Math.min(svd.top, top);
-    });
-
-    let html = `<div style="position:relative; width:100%; height:100%;">\n`;
-    copiedSvds.forEach(svd => {
-        html += getAbsoluteDiv(svd, svd.left - left, svd.top - top, svd.width, svd.height);
-    });
-    html += `</div>`;
-
     return html;
 }
 
@@ -337,7 +343,7 @@ function horSlice(matrix) {
         blocks.push(block);
     });
 
-    return blocks;    
+    return blocks;
 }
 
 function checkSeparator(matrix) {
@@ -478,7 +484,7 @@ function fixOverlaps(target, svds) {
             // 没有重叠
             continue;
         }
-        
+
         const left = Math.min(svd.left, target.left);
         const top = Math.min(svd.top, target.top);
         width -= left;
