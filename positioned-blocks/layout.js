@@ -3,9 +3,9 @@
 //     ]
 // }
 const colors = [
-  'ECF1EF', 'FCF6CF', '7FFFD4', '66CDAA', '458B74', 'C2CDCD', 'EED5B7', 'CDB79E',
-  '8A2BE2', 'A52A2A', '5F9EA0', '98F5FF', '8EE5EE', '7AC5CD', '458B00', 'D2691E',
-  'CD661D', '8B4513'
+    'ECF1EF', 'FCF6CF', '7FFFD4', '66CDAA', '458B74', 'C2CDCD', 'EED5B7', 'CDB79E',
+    '8A2BE2', 'A52A2A', '5F9EA0', '98F5FF', '8EE5EE', '7AC5CD', '458B00', 'D2691E',
+    'CD661D', '8B4513'
 ]
 
 const scaleDirections = {
@@ -23,12 +23,12 @@ let source = `
     a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0      b1  b1  b1  b1  b1  b1  b1  b1  b1  b1  b1          c0  c0  c0  c0  c0  c0  c0  c0  c0      d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1      e0  e0  e0  e0  e0  e0  e0  e0  e0  e0  e0
     a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0  a0      b1  b1  b1  b1  b1  b1  b1  b1  b1  b1  b1          c0  c0  c0  c0  c0  c0  c0  c0  c0      d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1  d1      e0  e0  e0  e0  e0  e0  e0  e0  e0  e0  e0
                                                                                                                                                                                                                                                                                                                                                                                                                 
-    f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0      g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
-    f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0      g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
-    f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0      g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
-    f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0      g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
-    f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0      g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
-    f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0  f0      g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
+                                            g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
+                                            g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
+                                            g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
+                                            g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
+                                            g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
+                                            g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0  g0      h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1  h1      i1  i1  i1  i1  i1  i1  i1  i1  i1  i1  i1          j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0  j0          k0  k0  k0  k0  k0  k0  k0  k0  k0  k0  k0
                                                                                                                                                                                                                                                                                                                                                                                                                 
     l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
     l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2  l2      m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0  m0      n1  n1  n1  n1  n1  n1  n1      r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3  r3      q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1  q1
@@ -121,7 +121,7 @@ function toSvdList(source) {
             }
             const tmp = source.filter(r => r.find(c => c === id)).map(r => r.filter(c => c === id));
             const scaleDirection = scaleDirections[id.match(/\w(\d+)/)[1]];
-            const layout = { left, top, scaleDirection, width: tmp[0].length, height: tmp.length };
+            const layout = {left, top, scaleDirection, width: tmp[0].length, height: tmp.length};
             svds.push({id, layout, htmlCoder});
         });
     });
@@ -129,7 +129,7 @@ function toSvdList(source) {
 
 function htmlCoder() {
     return `
-        <div style="width:100%; height:100%; background-color:#${colors[random(colors.length-1)]};">
+        <div style="width:100%; height:100%; background-color:#${colors[random(colors.length - 1)]};">
             ${this.id}
         </div>
     `;
@@ -173,11 +173,10 @@ console.log(svds);
 ///////////////////////////////////////////////////////////
 
 
-
-
 const UNIT_LENGTH = 8;
-const html = scalableLayout(svds);
-// const html = absoluteLayout(svds);
+//const html = scalableLayout(svds);
+
+const html = absoluteLayout(svds);
 showHtml(html);
 
 function scalableLayout(svds) {
@@ -199,7 +198,7 @@ function absoluteLayout(svds) {
         top = Math.min(svd.top, top);
     });
 
-    let html = `<div style="position:relative; width:100%; height:100%;">\n`;
+    let html = `<div style="position:relative; width:100%; height:100%;left:${left * UNIT_LENGTH}px;top:${top * UNIT_LENGTH}:px">\n`;
     copiedSvds.forEach(svd => {
         html += getAbsoluteDiv(svd, svd.left - left, svd.top - top, svd.width, svd.height);
     });
@@ -262,7 +261,7 @@ function layoutUnslicable(matrix, sizeAndGrow) {
 
 // 将包含多个独立块且无法切分的所有块的响应性去掉
 function removeUnslicablesScalability(matrix) {
-    const [blocks, ] = slice(matrix);
+    const [blocks,] = slice(matrix);
     if (blocks.length > 1) {
         blocks.forEach(b => removeUnslicablesScalability(b));
         return;
@@ -289,7 +288,7 @@ function verSlice(matrix) {
     const columns = matrix[0].length;
     for (let col = 1; col < columns; col++) {
         // 如果能找到这样的一行：它在col处左右两边的值相等，则位置col不是一个边
-        const found = matrix.find(row => !!row[col] && row[col] === row[col-1]);
+        const found = matrix.find(row => !!row[col] && row[col] === row[col - 1]);
         if (!found) {
             borders.push(col);
         }
@@ -531,7 +530,7 @@ function toMatrix(svds) {
         for (let col = 0; col < width; col++) {
             const svd = svds.find(svd =>
                 (row >= svd.top && row < svd.top + svd.height) &&
-                    (col >= svd.left && col < svd.left + svd.width));
+                (col >= svd.left && col < svd.left + svd.width));
             matrix[row][col] = svd ? svd : null;
         }
     }
