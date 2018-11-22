@@ -198,7 +198,7 @@ function absoluteLayout(svds) {
         top = Math.min(svd.top, top);
     });
 
-    let html = `<div style="position:relative; width:100%; height:100%;left:${left * UNIT_LENGTH}px;top:${top * UNIT_LENGTH}:px">\n`;
+    let html = `<div style="position:relative; width:100%; height:100%;left:${left * UNIT_LENGTH}px;top:${top * UNIT_LENGTH}px">\n`;
     copiedSvds.forEach(svd => {
         html += getAbsoluteDiv(svd, svd.left - left, svd.top - top, svd.width, svd.height);
     });
