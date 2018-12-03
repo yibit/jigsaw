@@ -174,9 +174,9 @@ console.log(svds);
 
 
 const UNIT_LENGTH = 8;
-//const html = scalableLayout(svds);
+const html = scalableLayout(svds);
 
-const html = absoluteLayout(svds);
+//const html = absoluteLayout(svds, true);
 showHtml(html);
 
 function scalableLayout(svds) {
@@ -189,18 +189,23 @@ function scalableLayout(svds) {
 }
 
 // 无视尺寸的响应性，直接生成绝对布局代码了，无论是否可以再切分的块，都可以采用这个方式布局
-function absoluteLayout(svds) {
+function absoluteLayout(svds, keepBorder = false) {
     const copiedSvds = simplifyAndCopy(svds);
 
     let left = Infinity, top = Infinity;
-    copiedSvds.forEach(svd => {
-        left = Math.min(svd.left, left);
-        top = Math.min(svd.top, top);
-    });
+    if (keepBorder) {
+        left = 0;
+        top = 0;
+    } else {
+        copiedSvds.forEach(svd => {
+            left = Math.min(svd.left, left);
+            top = Math.min(svd.top, top);
+        });
+    }
 
-    let html = `<div style="position:relative; width:100%; height:100%;left:${left * UNIT_LENGTH}px;top:${top * UNIT_LENGTH}px">\n`;
-    copiedSvds.forEach(svd => {
-        html += getAbsoluteDiv(svd, svd.left - left, svd.top - top, svd.width, svd.height);
+    let html = `<div style="position:relative; width:100%; height:100%;">\n`;
+    copiedSvds.forEach((svd,index) => {
+        html += getAbsoluteDiv(svd, svd.left - left, svd.top - top, svd.width, svd.height,index);
     });
     html += `</div>`;
 
@@ -246,7 +251,7 @@ function layoutUnslicable(matrix, sizeAndGrow) {
                 if (!svd || processedSvds.find(s => s === svd)) {
                     return;
                 }
-                html += getAbsoluteDiv(svd, left, top, svd.width, svd.height);
+                html += getAbsoluteDiv(svd, left, top, svd.width, svd.height,left);
                 processedSvds.push(svd);
             });
         });
@@ -501,12 +506,12 @@ function fixOverlaps(target, svds) {
     return false;
 }
 
-function getAbsoluteDiv(svd, left, top, width, height) {
+function getAbsoluteDiv(svd, left, top, width, height,index) {
     width *= UNIT_LENGTH;
     height *= UNIT_LENGTH;
     left *= UNIT_LENGTH;
     top *= UNIT_LENGTH;
-    const css = `width:${width}px; height:${height}px; left:${left}px; top:${top}px;`;
+    const css = `width:${width}px; height:${height}px; left:${left}px; top:${top}px;z-index:${index*2+12};display:flex;justify-content:center;align-items:center;`;
     return `
         <div style="position:absolute; ${css}">
             ${svd.origin.htmlCoder.apply(svd.origin)}
