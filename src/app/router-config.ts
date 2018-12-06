@@ -192,5 +192,13 @@ export const routerConfig = [
     {
         path: "icon",
         loadChildren: "./demo/icon/demo-set.module#IconDemoModule",
+    },
+    {
+        path: "transfer",
+        loadChildren: "./demo/transfer/demo-set.module#TransferDemoModule",
+    },
+    {
+        path: "breadcrumb",
+        loadChildren: "./demo/breadcrumb/demo-set.module#BreadcrumbDemoModule",
     }
 ];

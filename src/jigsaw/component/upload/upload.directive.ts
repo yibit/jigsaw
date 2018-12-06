@@ -47,6 +47,9 @@ export class JigsawUploadDirective extends JigsawUploadBase implements OnDestroy
     @Output('uploadProgress')
     public progress = new EventEmitter<UploadFileInfo>();
 
+    @Output('uploadRemove')
+    public remove = new EventEmitter<UploadFileInfo>();
+
     @Output('uploadComplete')
     public complete = new EventEmitter<UploadFileInfo[]>();
 
@@ -122,7 +125,8 @@ export class JigsawUploadDirective extends JigsawUploadBase implements OnDestroy
                 top: this._elementRef.nativeElement.offsetHeight
             },
             posReviser: (pos: PopupPositionValue, popupElement: HTMLElement): PopupPositionValue => {
-                return this._popupService.verticalPositionReviser(pos, popupElement, {
+                return this._popupService.positionReviser(pos, popupElement, {
+                    offsetWidth: this._elementRef.nativeElement.offsetWidth,
                     offsetHeight: this._elementRef.nativeElement.offsetHeight
                 });
             },

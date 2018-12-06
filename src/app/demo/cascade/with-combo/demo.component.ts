@@ -50,7 +50,7 @@ export class CascadeWithComboDemoComponent {
     parseMultipleMessage(selectedItems) {
         const selectedItemsStr = selectedItems.reduce((result, item) => {
             const districts = [];
-            if (item instanceof ArrayCollection) {
+            if (item instanceof ArrayCollection || item instanceof Array) {
                 item.forEach(district => districts.push(district.name));
             } else {
                 districts.push(item.name);
