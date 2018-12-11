@@ -292,7 +292,8 @@ function verSlice(matrix) {
     const borders = [];
     const columns = matrix[0].length;
     for (let col = 1; col < columns; col++) {
-        // 如果能找到这样的一行：它在col处左右两边的值相等，则位置col不是一个边
+        // 左右两边有svd的，不能为同一个svd（有组件跨越的不能切）
+        // 两列能找到左右两边不等的单元格（左右两边都相等就没必要切了）
         if (!matrix.find(row => !!row[col] && row[col] === row[col - 1]) &&
             matrix.find(row => row[col] !== row[col - 1])) {
             borders.push(col);
@@ -324,7 +325,8 @@ function horSlice(matrix) {
             return;
         }
         const lastRow = matrix[rowIdx - 1];
-        // 如果能找到这样的一列：它在rowIdx处上下两边的值相等，则位置rowIdx不是一个边
+        // 上下两边有svd的，不能为同一个svd（有组件跨越的不能切）
+        // 两行能找到上下两边不等的单元格（上下两边都相等就没必要切了）
         if(!row.find((svd, colIdx)=> !!svd && svd === lastRow[colIdx]) &&
             row.findIndex((svd, colIdx) => svd !== lastRow[colIdx]) != -1) {
             borders.push(rowIdx);
