@@ -145,7 +145,7 @@ function random(max) {
 }
 
 toSvdList(source);
-svds.find(svd => svd.id == 't2').layout.height += 6;
+//svds.find(svd => svd.id == 't2').layout.height += 6;
 // svds.find(svd => svd.id == 'n1').layout.left -= 3;
 
 
@@ -293,8 +293,8 @@ function verSlice(matrix) {
     const columns = matrix[0].length;
     for (let col = 1; col < columns; col++) {
         // 如果能找到这样的一行：它在col处左右两边的值相等，则位置col不是一个边
-        const found = matrix.find(row => !!row[col] && row[col] === row[col - 1]);
-        if (!found) {
+        if (!matrix.find(row => !!row[col] && row[col] === row[col - 1]) &&
+            matrix.find(row => row[col] !== row[col - 1])) {
             borders.push(col);
         }
     }
@@ -325,8 +325,8 @@ function horSlice(matrix) {
         }
         const lastRow = matrix[rowIdx - 1];
         // 如果能找到这样的一列：它在rowIdx处上下两边的值相等，则位置rowIdx不是一个边
-        const found = row.find((svd, colIdx) => !!svd && svd === lastRow[colIdx]);
-        if (!found) {
+        if(!row.find((svd, colIdx)=> !!svd && svd === lastRow[colIdx]) &&
+            row.findIndex((svd, colIdx) => svd !== lastRow[colIdx]) != -1) {
             borders.push(rowIdx);
         }
     });
@@ -371,14 +371,13 @@ function calcSizeAndGrow(matrix, direction, slicable) {
     const physicalSize = !slicable ? calcPhysicalSize(matrix) : {width: '100%', height: '100%'};
 
     if (direction == 'row') {
-        return grow == 0 ? `width:${matrix[0].length * UNIT_LENGTH}px; height:${physicalSize.height};` :
-            `flex-basis:0; flex-grow:${grow}; height:${physicalSize.height};`;
+        return grow == 0 ? `width:${matrix[0].length * UNIT_LENGTH}px; height:${physicalSize.height}; flex: 0 0 auto;` :
+            `height:${physicalSize.height}; flex: ${grow} 1 auto; width: 0`;
     } else if (direction == 'column') {
-        return grow == 0 ? `width:${physicalSize.width}; height:${matrix.length * UNIT_LENGTH}px;` :
-            // 这里的 height:0 是为了解决chrome的bug
-            `width:${physicalSize.width}; flex-basis:0; flex-grow:${grow}; height:0;`;
+        return grow == 0 ? `width:${physicalSize.width}; height:${matrix.length * UNIT_LENGTH}px; flex: 0 0 auto;` :
+            `width:${physicalSize.width}; flex: ${grow} 1 auto; height: 0;`;
     } else {
-        return 'width:100%; height:100%;';
+        return 'width:100%; height:100%;flex: 0 0 auto;';
     }
 }
 
