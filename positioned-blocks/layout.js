@@ -374,7 +374,7 @@ function calcSizeAndGrow(matrix, direction, slicable) {
 
     if (direction == 'row') {
         return grow == 0 ? `width:${matrix[0].length * UNIT_LENGTH}px; height:${physicalSize.height}; flex: 0 0 auto;` :
-            `height:${physicalSize.height}; flex: ${grow} 1 auto; width: 0`;
+            `height:${physicalSize.height}; flex: ${grow} 1 auto;`;
     } else if (direction == 'column') {
         return grow == 0 ? `width:${physicalSize.width}; height:${matrix.length * UNIT_LENGTH}px; flex: 0 0 auto;` :
             `width:${physicalSize.width}; flex: ${grow} 1 auto; height: 0;`;
