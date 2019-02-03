@@ -1,0 +1,13 @@
+{
+  "name": "svd-services",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "build-services": "webpack --progress --profile --bail"
+  },
+  "private": true,
+  "devDependencies": {
+    "webpack-cli": "^3.0.8",
+    "webpack-command": "^0.4.1"
+  }
+}
