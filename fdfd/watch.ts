@@ -6,7 +6,6 @@ import * as http from "http";
 import * as chokidar from "chokidar";
 
 const srcRoot = path.join(__dirname, 'src').replace(/\\/g, '/');
-const distRoot = path.join(__dirname, 'dist').replace(/\\/g, '/');
 const [bundlePath, entryPath] = readConfig();
 console.log('entry:', entryPath);
 console.log('dist:', bundlePath);
@@ -39,8 +38,16 @@ const watcher = chokidar.watch(srcRoot, {ignored: /(^|[\/\\])\../})
         if (!fullPath.match(/.+\.ts$/i)) {
             return;
         }
+
         if (pendingFiles.indexOf(fullPath) == -1) {
-            watcher.add(getAllImportedFiles(fullPath));
+            const importedFiles = getAllImportedFiles(fullPath);
+            watcher.add(...importedFiles);
+            while (importedFiles.length > 0) {
+                const file = importedFiles.pop();
+                if (pendingFiles.indexOf(file) == -1) {
+                    pendingFiles.push(file);
+                }
+            }
             pendingFiles.push(fullPath);
         }
 
@@ -49,7 +56,6 @@ const watcher = chokidar.watch(srcRoot, {ignored: /(^|[\/\\])\../})
         }
         handler = setTimeout(emitPendingFiles, 200);
     });
-// watcher.add('D:/Codes/webpack-build/other-libs/mylib.ts');
 
 function emitPendingFiles(): void {
     if (pendingFiles.length == 0) {
@@ -81,10 +87,14 @@ function emitFile(fullPath: string): void {
     buffered.lastModified = +stat.mtime;
     buffered.version++;
 
-    console.log(`Emitting ${fullPath}`);
-    let output = services.getEmitOutput(fullPath);
-    logErrors(fullPath);
-    buffered.compiled = output.outputFiles.length > 0 ? output.outputFiles[0].text : '';
+    if (fullPath.match(/.+\.ts$/)) {
+        console.log(`Emitting ${fullPath}`);
+        let output = services.getEmitOutput(fullPath);
+        logErrors(fullPath);
+        buffered.compiled = output.outputFiles.length > 0 ? output.outputFiles[0].text : '';
+    } else {
+        buffered.compiled = fs.readFileSync(fullPath).toString();
+    }
 }
 
 function logErrors(fileName: string): void {
@@ -187,7 +197,17 @@ function generateBundle(): void {
 /***/ (function(module, exports, __webpack_require__) {
 
 ${buffered.compiled.replace(/\brequire\("(.*?)"\)/g, (found, importFrom) => {
-            const p = path.resolve(path.join(getFilePath(file), importFrom)).replace(/\\/g, '/') + '.ts';
+
+            const pkgPath = path.join(__dirname, 'node_modules', importFrom);
+            const pkgFile = path.join(pkgPath, 'package.json');
+            let p;
+            if (fs.existsSync(pkgFile)) {
+                const pkg = require(pkgFile);
+                p = pkg.main ? path.join(pkgPath, pkg.main) : undefined;
+            } else {
+                p = path.join(getFilePath(file), importFrom) + '.ts';
+            }
+            p = p ? path.resolve(p).replace(/\\/g, '/') : undefined;
             const f = files[p];
             return !!f ? `__webpack_require__(${f.index})` : found;
         })}
@@ -249,8 +269,18 @@ function getAllImportedFiles(fullPath: string): string[] {
     const source = fs.readFileSync(fullPath).toString();
     const importedFiles = [];
     source.replace(/^\s*import\b.+\bfrom\b\s*['"](.*)['"]/mg, (found, importFrom) => {
-        const file = path.resolve(path.join(filePath, importFrom)).replace(/\\/g, '/') + '.ts';
-        importedFiles.push(file);
+        const pkgPath = path.join(__dirname, 'node_modules', importFrom);
+        const pkgFile = path.join(pkgPath, 'package.json');
+        let file;
+        if (fs.existsSync(pkgFile)) {
+            const pkg = require(pkgFile);
+            file = pkg.main ? path.join(pkgPath, pkg.main) : undefined;
+        } else {
+            file = path.join(filePath, importFrom) + '.ts';
+        }
+        if (file) {
+            importedFiles.push(path.resolve(file).replace(/\\/g, '/'));
+        }
         return found;
     });
     return importedFiles;
