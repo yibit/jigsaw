@@ -5,15 +5,17 @@ import * as sh from "shelljs";
 import * as http from "http";
 import * as chokidar from "chokidar";
 
-const srcRoot = path.join(__dirname, '..', 'src').replace(/\\/g, '/');
-const distRoot = path.join(__dirname, '..', 'dist').replace(/\\/g, '/');
+const srcRoot = path.join(__dirname, 'src').replace(/\\/g, '/');
+const distRoot = path.join(__dirname, 'dist').replace(/\\/g, '/');
 const [bundlePath, entryPath] = readConfig();
+console.log('entry:', entryPath);
+console.log('dist:', bundlePath);
 
 let maxIndex = 0;
 type BufferedScript = { version: number, lastModified: number, index: number, compiled?: string };
 const files: ts.MapLike<BufferedScript> = {};
 const pendingFiles = [];
-const compilationOptions = {module: ts.ModuleKind.CommonJS};
+const compilationOptions = {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5};
 
 const servicesHost: ts.LanguageServiceHost = {
     getScriptFileNames: () => sh.find(srcRoot).filter(file => file.match(/.+\.ts$/i) && fs.statSync(file).isFile()),
@@ -73,10 +75,10 @@ function emitFile(fullPath: string): void {
         files[fullPath] = buffered;
     }
     const stat = fs.statSync(fullPath);
-    if (buffered.lastModified >= stat.mtimeMs) {
+    if (buffered.lastModified >= +stat.mtime) {
         return;
     }
-    buffered.lastModified = stat.mtimeMs;
+    buffered.lastModified = +stat.mtime;
     buffered.version++;
 
     console.log(`Emitting ${fullPath}`);
@@ -201,21 +203,28 @@ ${buffered.compiled.replace(/\brequire\("(.*?)"\)/g, (found, importFrom) => {
 }
 
 function readConfig(): [string, string] {
-    const webpackConfig = `${__dirname}/../webpack.config.js`;
-    const match = sh.cat(webpackConfig).match(/entry\s*:\s*({[\s\S]*?})/);
+    const webpackConfig = sh.cat(`${__dirname}/webpack.config.js`);
+
+    let match = webpackConfig.match(/\boutput\s*:\s*{[\s\S]*?\bpath\s*:\s*(.*)[\s\S]*?}/);
     if (!match) {
-        throw new Error(`unable to read config from ${webpackConfig}`);
+        throw new Error(`unable to read output config from webpack.config.js`);
+    }
+    const outPath = eval(match[1].replace(/(.*),\s*$/, '$1'));
+
+    match = webpackConfig.match(/\bentry\s*:\s*({[\s\S]*?})/);
+    if (!match) {
+        throw new Error(`unable to read entry config from webpack.config.js`);
     }
     const config = eval(`(${match[1]})`);
+    let outFile, entry;
     for (let p in config) {
         if (!config.hasOwnProperty(p)) {
             continue;
         }
-        const out = path.join(distRoot, `${p}.js`);
-        const entry = path.resolve(path.join(srcRoot, '..', config[p])).replace(/\\/g, '/');
-        return [out, entry];
+        outFile = path.join(outPath, `${p}.js`);
+        entry = path.resolve(path.join(srcRoot, '..', config[p])).replace(/\\/g, '/');
+        return [outFile, entry];
     }
-    throw new Error(`unable to read config from ${webpackConfig}`);
 }
 
 function getFilePath(file: string): string {
@@ -226,7 +235,7 @@ function getFilePath(file: string): string {
 
 function reinit(): void {
     const options = {
-        host: '127.0.0.1', port: 8080, path: '/rdk/service/app/example/server/my_service'
+        host: '127.0.0.1', port: 9090, path: '/rdk/service/app/example/server/my_service'
     };
     const req = http.request(options);
     req.on('error', (e) => {
