@@ -11,14 +11,20 @@ console.log('entry:', entryPath);
 console.log('dist:', bundlePath);
 
 let maxIndex = 0;
-type BufferedScript = { version: number, lastModified: number, index: number, compiled?: string };
-const files: ts.MapLike<BufferedScript> = {};
-const pendingFiles = [];
+type ScriptTree = { version: number, lastModified: number, compiled?: string, children: ScriptTree[], path: string };
+const rootTree: ScriptTree = getScriptTree(entryPath);
+
+
+// const files: ts.MapLike<ScriptTree> = {};
+// const pendingFiles = [];
 const compilationOptions = {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5};
 
 const servicesHost: ts.LanguageServiceHost = {
     getScriptFileNames: () => sh.find(srcRoot).filter(file => file.match(/.+\.ts$/i) && fs.statSync(file).isFile()),
-    getScriptVersion: fileName => files[fileName] ? files[fileName].version.toString() : '0',
+    getScriptVersion: fileName => {
+        const tree = findScriptNode(fileName);
+        return tree ? String(tree.version) : '0';
+    },
     getScriptSnapshot: file => fs.existsSync(file) ? ts.ScriptSnapshot.fromString(fs.readFileSync(file).toString()) : undefined,
     getCurrentDirectory: () => srcRoot,
     getCompilationSettings: () => compilationOptions,
@@ -40,11 +46,12 @@ const watcher = chokidar.watch(srcRoot, {ignored: /(^|[\/\\])\../})
         }
 
         if (pendingFiles.indexOf(fullPath) == -1) {
-            const importedFiles = getAllImportedFiles(fullPath);
-            watcher.add(...importedFiles);
+            const importedFiles = getScriptTree(fullPath);
+            watcher.add(importedFiles.concat());
             while (importedFiles.length > 0) {
                 const file = importedFiles.pop();
                 if (pendingFiles.indexOf(file) == -1) {
+                    console.log('!!!!!!!!!!!', file);
                     pendingFiles.push(file);
                 }
             }
@@ -58,6 +65,7 @@ const watcher = chokidar.watch(srcRoot, {ignored: /(^|[\/\\])\../})
     });
 
 function emitPendingFiles(): void {
+    console.log(pendingFiles);
     if (pendingFiles.length == 0) {
         return;
     }
@@ -194,6 +202,7 @@ function generateBundle(): void {
         }
         out += `
 /* ${buffered.index} */
+/* module: ${file} */
 /***/ (function(module, exports, __webpack_require__) {
 
 ${buffered.compiled.replace(/\brequire\("(.*?)"\)/g, (found, importFrom) => {
@@ -255,7 +264,7 @@ function getFilePath(file: string): string {
 
 function reinit(): void {
     const options = {
-        host: '127.0.0.1', port: 9090, path: '/rdk/service/app/example/server/my_service'
+        host: '127.0.0.1', port: 5812, path: '/rdk/service/app/ui-designer/server/reinit'
     };
     const req = http.request(options);
     req.on('error', (e) => {
@@ -264,11 +273,11 @@ function reinit(): void {
     req.end();
 }
 
-function getAllImportedFiles(fullPath: string): string[] {
+function getScriptTree(fullPath: string): ScriptTree {
     const filePath = getFilePath(fullPath);
     const source = fs.readFileSync(fullPath).toString();
-    const importedFiles = [];
-    source.replace(/^\s*import\b.+\bfrom\b\s*['"](.*)['"]/mg, (found, importFrom) => {
+    const scriptTree: ScriptTree = {version:0, lastModified: 0, children: [], path: fullPath};
+    source.replace(/^\s*(im|ex)port\b.+\bfrom\b\s*['"](.*)['"]/mg, (found, ignored, importFrom) => {
         const pkgPath = path.join(__dirname, 'node_modules', importFrom);
         const pkgFile = path.join(pkgPath, 'package.json');
         let file;
@@ -279,9 +288,30 @@ function getAllImportedFiles(fullPath: string): string[] {
             file = path.join(filePath, importFrom) + '.ts';
         }
         if (file) {
-            importedFiles.push(path.resolve(file).replace(/\\/g, '/'));
+            const child: ScriptTree = findScriptNode(file);
+            scriptTree.children.push(child ? child : getScriptTree(file));
         }
         return found;
     });
-    return importedFiles;
+    return scriptTree;
+}
+
+function findScriptNode(fullPath: string, tree?: ScriptTree): ScriptTree {
+    tree = tree ? tree : rootTree;
+    if (tree.path == fullPath) {
+        return tree;
+    }
+    return tree.children.find(child => !!findScriptNode(fullPath, child));
+}
+
+function flatScriptTree(tree: ScriptTree): string[] {
+    const files: string[] = [];
+    const flat = (child: ScriptTree) => {
+        if (files.indexOf(child.path) == -1) {
+            files.push(child.path);
+        }
+        child.children.forEach(c => flat(c));
+    };
+    flat(tree);
+    return files;
 }
