@@ -7,19 +7,16 @@ import * as chokidar from "chokidar";
 
 type ScriptTree = {
     version: number, lastModified: number, compiled?: string,
-    children: ScriptTree[], path: string, index: number
+    children: ScriptTree[], path: string
 };
 
-let maxIndex = 0;
 const srcRoot = path.join(__dirname, 'src').replace(/\\/g, '/');
 const [bundlePath, entryPath] = readConfig();
-const libPath = path.join(__dirname, 'node_modules/typescript/lib/lib.d.ts');
+const libPath = path.join(__dirname, 'node_modules/typescript/lib/lib6.d.ts');
 console.log('entry:', entryPath);
 console.log('dist:', bundlePath);
-const rootTree: ScriptTree = getScriptTree(entryPath);
-const compilationOptions = {module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5};
-const scriptFileNames: string[] = [entryPath, libPath];
 
+const scriptFileNames: string[] = [entryPath, libPath];
 const servicesHost: ts.LanguageServiceHost = {
     getScriptFileNames: () => scriptFileNames,
     getScriptVersion: fileName => {
@@ -28,7 +25,7 @@ const servicesHost: ts.LanguageServiceHost = {
     },
     getScriptSnapshot: file => fs.existsSync(file) ? ts.ScriptSnapshot.fromString(fs.readFileSync(file).toString()) : undefined,
     getCurrentDirectory: () => srcRoot,
-    getCompilationSettings: () => compilationOptions,
+    getCompilationSettings: () => ({module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5}),
     getDefaultLibFileName: options => ts.getDefaultLibFilePath(options),
     fileExists: ts.sys.fileExists,
     readFile: ts.sys.readFile,
@@ -36,6 +33,7 @@ const servicesHost: ts.LanguageServiceHost = {
 };
 const services = ts.createLanguageService(servicesHost, ts.createDocumentRegistry());
 
+const rootTree: ScriptTree = parseScriptTree(entryPath);
 updateScriptFileNames(flatScriptTree());
 generateBundle();
 
@@ -55,7 +53,7 @@ const watcher = chokidar.watch(srcRoot, {ignored: /(^|[\/\\])\../})
         if (script.lastModified >= +stat.mtime) {
             return;
         }
-        if (!pendingFiles.find(f => f.path == fullPath)) {
+        if (!(pendingFiles as any).find(f => f.path == fullPath)) {
             pendingFiles.push({path: fullPath, stat: stat});
         }
         if (handler != -1) {
@@ -69,7 +67,7 @@ function emitPendingFiles(): void {
         return;
     }
     pendingFiles.forEach(file => {
-        const newScript = getScriptTree(file.path);
+        const newScript = parseScriptTree(file.path);
         if (!newScript) {
             return;
         }
@@ -182,10 +180,10 @@ function generateBundle(): void {
 /******/    __webpack_require__.p = "";
 /******/
 /******/    // Load entry module and return exports
-/******/    return __webpack_require__(__webpack_require__.s = 0);
+/******/    return __webpack_require__(__webpack_require__.s = "${normalizePath(entryPath)}");
 /******/ })
 /************************************************************************/
-/******/ ([
+/******/ ({
     `;
 
     flatScriptTree().forEach(script => {
@@ -194,8 +192,7 @@ function generateBundle(): void {
         }
         const fileDir = getFilePath(script.path);
         out += `
-/* ${script.index} */
-/* module: ${script.path} */
+"${script.path}":
 /***/ (function(module, exports, __webpack_require__) {
 
 ${script.compiled.replace(/\brequire\("(.*?)"\)/g, (found, importFrom) => {
@@ -210,14 +207,14 @@ ${script.compiled.replace(/\brequire\("(.*?)"\)/g, (found, importFrom) => {
             }
             p = p ? normalizePath(p) : undefined;
             const importedScript = findScriptNode(p);
-            return !!importedScript ? `__webpack_require__(${importedScript.index})` : found;
+            return !!importedScript ? `__webpack_require__("${importedScript.path}")` : found;
         })}
 
 /***/ }),
         `;
     });
 
-    out += '\n/******/ ]);';
+    out += '\n/******/ });';
     console.log(`saving bundle to ${bundlePath}`);
     fs.writeFileSync(bundlePath, out);
 
@@ -266,34 +263,48 @@ function reinit(): void {
     req.end();
 }
 
-function getScriptTree(fullPath: string): ScriptTree {
+function parseScriptTree(fullPath: string): ScriptTree {
     if (!fs.existsSync(fullPath)) {
         return null;
     }
 
-    const filePath = getFilePath(fullPath);
-    const source = fs.readFileSync(fullPath).toString();
-    const scriptTree: ScriptTree = createScriptNode(fullPath);
-    source.replace(/^\s*(im|ex)port\b.+\bfrom\b\s*['"](.*)['"]/mg, (found, ignored, importFrom) => {
-        const pkgPath = path.join(__dirname, 'node_modules', importFrom);
-        const pkgFile = path.join(pkgPath, 'package.json');
-        let file;
-        if (fs.existsSync(pkgFile)) {
-            const pkg = require(pkgFile);
-            file = pkg.main ? path.join(pkgPath, pkg.main) : undefined;
-        } else {
-            file = path.join(filePath, importFrom) + '.ts';
+    const parsedScripts: any = flatScriptTree();
+    const parse = (fullPath: string): ScriptTree => {
+        fullPath = normalizePath(fullPath);
+        if (fullPath.match(/\/(basics|sdk)-src\//)) {
+            return;
         }
-        if (file) {
-            let child: ScriptTree = findScriptNode(file);
-            child = child ? child : getScriptTree(file);
-            if (!!child) {
-                scriptTree.children.push(child);
+
+        console.log('parsing', fullPath);
+        const scriptTree: ScriptTree = createScriptNode(fullPath);
+        if (!parsedScripts.find(s => s.path == fullPath)) {
+            parsedScripts.push(scriptTree);
+        }
+
+        const filePath = getFilePath(fullPath);
+        const source = fs.readFileSync(fullPath).toString();
+        source.replace(/^\s*(im|ex)port\b.+\bfrom\b\s*['"](.*)['"]/mg, (found, ignored, importFrom) => {
+            const pkgPath = path.join(__dirname, 'node_modules', importFrom);
+            const pkgFile = path.join(pkgPath, 'package.json');
+            let file;
+            if (fs.existsSync(pkgFile)) {
+                const pkg = require(pkgFile);
+                file = pkg.main ? path.join(pkgPath, pkg.main) : undefined;
+            } else {
+                file = path.join(filePath, importFrom) + '.ts';
             }
-        }
-        return found;
-    });
-    return scriptTree;
+            if (file) {
+                let child: ScriptTree = parsedScripts.find(s => s.path == normalizePath(file));
+                child = !!child ? child : parse(file);
+                if (!!child) {
+                    scriptTree.children.push(child);
+                }
+            }
+            return found;
+        });
+        return scriptTree;
+    };
+    return parse(fullPath);
 }
 
 function findScriptNode(fullPath: string, tree?: ScriptTree): ScriptTree {
@@ -306,12 +317,15 @@ function findScriptNode(fullPath: string, tree?: ScriptTree): ScriptTree {
         return;
     }
     fullPath = normalizePath(fullPath);
-    return flatScriptTree(tree).find(script => script.path == fullPath);
+    return (flatScriptTree(tree) as any).find(script => script.path == fullPath);
 }
 
 function flatScriptTree(tree?: ScriptTree): ScriptTree[] {
     const flatten: ScriptTree[] = [];
     const flat = (child: ScriptTree) => {
+        if (!child) {
+            return;
+        }
         if (flatten.indexOf(child) == -1) {
             flatten.push(child);
         }
@@ -326,7 +340,7 @@ function normalizePath(file: string): string {
 }
 
 function createScriptNode(fullPath: string): ScriptTree {
-    return {version: 0, lastModified: 0, children: [], path: normalizePath(fullPath), index: (maxIndex++)};
+    return {version: 0, lastModified: 0, children: [], path: normalizePath(fullPath)};
 }
 
 function updateScriptFileNames(incoming: ScriptTree[]) {
@@ -337,11 +351,6 @@ function updateScriptFileNames(incoming: ScriptTree[]) {
             scriptFileNames.push(script.path);
         }
     }
-}
-
-// ===============
-function saveObject(obj, filename) {
-    fs.writeFileSync(__dirname + '/temp/' + filename + '.json', JSON.stringify(obj, null, '  '));
 }
 
 
