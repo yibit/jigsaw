@@ -39,7 +39,7 @@ generateBundle();
 
 let handler;
 const pendingFiles: { path: string, stat: fs.Stats }[] = [];
-const watcher = chokidar.watch(srcRoot, {ignored: /(^|[\/\\])\../})
+chokidar.watch(srcRoot, {ignored: /(^|[\/\\])\../})
     .on('change', (fullPath, stat) => {
         fullPath = normalizePath(fullPath);
         if (!fullPath.match(/.+\.ts$/i)) {
@@ -56,17 +56,16 @@ const watcher = chokidar.watch(srcRoot, {ignored: /(^|[\/\\])\../})
         if (!(pendingFiles as any).find(f => f.path == fullPath)) {
             pendingFiles.push({path: fullPath, stat: stat});
         }
-        if (handler != -1) {
-            clearTimeout(handler);
-        }
-        handler = setTimeout(emitPendingFiles, 200);
+
+        clearTimeout(handler);
+        handler = setTimeout(emitPendingFiles, 300);
     });
 
 function emitPendingFiles(): void {
     if (pendingFiles.length == 0) {
         return;
     }
-    pendingFiles.forEach(file => {
+    pendingFiles.forEach((file, index, arr) => {
         const newScript = parseScriptTree(file.path);
         if (!newScript) {
             return;
@@ -77,16 +76,16 @@ function emitPendingFiles(): void {
         oldScript.version++;
         oldScript.lastModified = +file.stat.mtime;
         oldScript.children = newScript.children;
-        compileScript(oldScript);
+        compileScript(oldScript, index, arr.length);
     });
     pendingFiles.splice(0, pendingFiles.length);
     handler = -1;
     generateBundle();
 }
 
-function compileScript(script: ScriptTree): void {
+function compileScript(script: ScriptTree, index: number, length: number): void {
     if (script.path.match(/.+\.ts$/)) {
-        console.log(`Emitting ${script.path}`);
+        console.log(`Compiling (${index + 1}/${length}): ${script.path}`);
         let output = services.getEmitOutput(script.path);
         logErrors(script.path);
         script.compiled = output.outputFiles.length > 0 ? output.outputFiles[0].text : '';
@@ -186,9 +185,9 @@ function generateBundle(): void {
 /******/ ({
     `;
 
-    flatScriptTree().forEach(script => {
+    flatScriptTree().forEach((script, index, arr) => {
         if (!script.compiled) {
-            compileScript(script);
+            compileScript(script, index, arr.length);
         }
         const fileDir = getFilePath(script.path);
         out += `
@@ -268,21 +267,21 @@ function parseScriptTree(fullPath: string): ScriptTree {
         return null;
     }
 
+    fullPath = normalizePath(fullPath);
     const parsedScripts: any = flatScriptTree();
-    const parse = (fullPath: string): ScriptTree => {
-        fullPath = normalizePath(fullPath);
-        if (fullPath.match(/\/(basics|sdk)-src\//)) {
-            return;
-        }
+    const scriptTree: ScriptTree = createScriptNode(fullPath);
+    const pending = [{children: scriptTree.children, file: fullPath}];
 
-        console.log('parsing', fullPath);
-        const scriptTree: ScriptTree = createScriptNode(fullPath);
-        if (!parsedScripts.find(s => s.path == fullPath)) {
-            parsedScripts.push(scriptTree);
+    let count = 0;
+    while (true) {
+        const info = pending.shift();
+        if (!info) {
+            break;
         }
+        let curFile = info.file, curChildren = info.children;
+        console.log(`Parsing (${++count}/${pending.length + count}): ${curFile}`);
 
-        const filePath = getFilePath(fullPath);
-        const source = fs.readFileSync(fullPath).toString();
+        const source = fs.readFileSync(curFile).toString();
         source.replace(/^\s*(im|ex)port\b.+\bfrom\b\s*['"](.*)['"]/mg, (found, ignored, importFrom) => {
             const pkgPath = path.join(__dirname, 'node_modules', importFrom);
             const pkgFile = path.join(pkgPath, 'package.json');
@@ -291,20 +290,28 @@ function parseScriptTree(fullPath: string): ScriptTree {
                 const pkg = require(pkgFile);
                 file = pkg.main ? path.join(pkgPath, pkg.main) : undefined;
             } else {
-                file = path.join(filePath, importFrom) + '.ts';
+                file = path.join(getFilePath(curFile), importFrom) + '.ts';
             }
-            if (file) {
-                let child: ScriptTree = parsedScripts.find(s => s.path == normalizePath(file));
-                child = !!child ? child : parse(file);
-                if (!!child) {
-                    scriptTree.children.push(child);
-                }
+            if (!file) {
+                console.error('  Error: need a main property in the package.json:', pkgFile);
+                return '';
             }
-            return found;
+            if (!fs.existsSync(file)) {
+                console.error('  Error: file not exists:', file);
+                return '';
+            }
+            file = normalizePath(file);
+            let child: ScriptTree = parsedScripts.find(s => s.path == file);
+            if (!child) {
+                child = createScriptNode(file);
+                parsedScripts.push(child);
+                pending.push({children: child.children, file: file});
+            }
+            curChildren.push(child);
         });
-        return scriptTree;
-    };
-    return parse(fullPath);
+    }
+
+    return scriptTree;
 }
 
 function findScriptNode(fullPath: string, tree?: ScriptTree): ScriptTree {
