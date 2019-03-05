@@ -5,11 +5,12 @@ import {IDynamicInstantiatable} from "../jigsaw/component/common";
 @Component({
     selector: 'complete-component',
     template: `CompleteComponent2:
-    <jigsaw-button (click)="onClick()">{{it}} @ {{index}}</jigsaw-button>`
+    <jigsaw-input [placeholder]="it + '@' + index + '@' + odd"></jigsaw-input>`
 })
 export class CompleteComponent2 extends InitData implements IDynamicInstantiatable {
     constructor(public initData: InitData) {
         super(initData);
+        console.log(this.initData);
     }
 
     onClick() {
@@ -18,7 +19,20 @@ export class CompleteComponent2 extends InitData implements IDynamicInstantiatab
 }
 @Component({
     selector: 'complete-component',
-    template: `CompleteComponent1: {{it}} @ {{index}}`
+    template: `
+        CompleteComponent1:<br>
+        <j-combo-select maxWidth="500"
+                        [clearable]="true"
+                        labelField="enName"
+                        [searchable]="true"
+                        placeholder="search a country...">
+            <ng-template>
+                <div style="background-color: #3ab1ea; width: 200px; height: 100px;">
+                </div>
+            </ng-template>
+        </j-combo-select>
+        <br>
+    `
 })
 export class CompleteComponent1 extends InitData implements IDynamicInstantiatable {
     constructor(public initData: InitData) {
@@ -42,10 +56,9 @@ export class CompleteComponentP extends InitData implements IDynamicInstantiatab
     selector: 'app-root',
     template: `
         <jigsaw-root>
-            <div class="app-wrap">
-                <awade-iterative-container [data]="
-                        [{list:[11,12,13,14], child: child1}, {list:[21,22,23,24], child: child2}]
-                    " [iterateWith]="iterateWith">
+            <a (click)="changeData()">change data</a> <a (click)="showHide()">showHide</a>
+            <div *ngIf="!hidden" class="app-wrap">
+                <awade-iterative-container [data]="data" [iterateWith]="iterateWith">
                 </awade-iterative-container>
             </div>
         </jigsaw-root>
@@ -54,9 +67,17 @@ export class CompleteComponentP extends InitData implements IDynamicInstantiatab
     encapsulation: ViewEncapsulation.None
 })
 export class AppComponent {
+    hidden = false;
+    data: any = [{list:[11,12,13,14], child: CompleteComponent1}, {list:['21',null,null,33.22], child: CompleteComponent2}];
     iterateWith = CompleteComponentP;
-    child1 = CompleteComponent1;
-    child2 = CompleteComponent2;
+
+    changeData() {
+        this.data = [{list:[111,112,113,114], child: CompleteComponent1}, {list:['1232321',true,true,33.22], child: CompleteComponent2}];
+    }
+
+    showHide() {
+        this.hidden = !this.hidden;
+    }
 }
 
 // @Injectable()

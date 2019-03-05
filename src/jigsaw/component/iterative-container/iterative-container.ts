@@ -1,4 +1,4 @@
-import {Component, Injector, Input, NgIterable, Type} from "@angular/core";
+import {Component, Injector, Input, NgIterable, OnDestroy, Type} from "@angular/core";
 import {IDynamicInstantiatable} from "../common";
 
 export class InitData {
@@ -40,19 +40,46 @@ export class InitData {
         </div>
     `
 })
-export class IterativeContainerComponent {
-    @Input()
-    public data: NgIterable<any>;
+export class IterativeContainerComponent implements OnDestroy {
     @Input()
     public iterateWith: Type<IDynamicInstantiatable>;
     @Input()
     public trackItemBy: string | string[];
 
+    private _injectors: Injector[] = [];
+    private _data: NgIterable<any>;
+
+    @Input()
+    public get data(): NgIterable<any> {
+        return this._data;
+    }
+
+    public set data(value: NgIterable<any>) {
+        if (value === this._data) {
+            return;
+        }
+        this._injectors.splice(0, Infinity);
+        this._data = value;
+    }
+
     constructor(private _injector: Injector) {
     }
 
     public createInjector(it: any, index: number, odd: boolean, even: boolean, first: boolean, last: boolean): Injector {
-        const provider = {provide: InitData, useValue: {it, index, odd, even, first, last}};
-        return Injector.create({providers: [provider], parent: this._injector});
+        if (!!this._injectors[index]) {
+            return this._injectors[index];
+        }
+
+        const useValue: any = {it, index, odd, even, first, last};
+        const injector = Injector.create({
+            providers: [{provide: InitData, useValue: useValue}],
+            parent: this._injector
+        });
+        this._injectors[index] = injector;
+        return injector;
+    }
+
+    ngOnDestroy() {
+        this._injectors.splice(0, Infinity);
     }
 }
