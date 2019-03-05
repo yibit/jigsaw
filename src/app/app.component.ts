@@ -7,16 +7,9 @@ import {IDynamicInstantiatable} from "../jigsaw/component/common";
     template: `CompleteComponent2:
     <jigsaw-button (click)="onClick()">{{it}} @ {{index}}</jigsaw-button>`
 })
-export class CompleteComponent2 implements IDynamicInstantiatable {
-    public it: any;
-    public index: number;
-
+export class CompleteComponent2 extends InitData implements IDynamicInstantiatable {
     constructor(public initData: InitData) {
-        if (initData) {
-            this.it = initData.iterator;
-            this.index = initData.index;
-        }
-        console.log(initData);
+        super(initData);
     }
 
     onClick() {
@@ -27,16 +20,9 @@ export class CompleteComponent2 implements IDynamicInstantiatable {
     selector: 'complete-component',
     template: `CompleteComponent1: {{it}} @ {{index}}`
 })
-export class CompleteComponent1 implements IDynamicInstantiatable {
-    public it: any;
-    public index: number;
-
+export class CompleteComponent1 extends InitData implements IDynamicInstantiatable {
     constructor(public initData: InitData) {
-        if (initData) {
-            this.it = initData.iterator;
-            this.index = initData.index;
-        }
-        console.log(initData);
+        super(initData);
     }
 }
 
@@ -46,16 +32,9 @@ export class CompleteComponent1 implements IDynamicInstantiatable {
         <awade-iterative-container [data]="it.list" [iterateWith]="it.child"></awade-iterative-container>
     `
 })
-export class CompleteComponentP implements IDynamicInstantiatable {
-    public it: any;
-    public index: number;
-
+export class CompleteComponentP extends InitData implements IDynamicInstantiatable {
     constructor(public initData: InitData) {
-        if (initData) {
-            this.it = initData.iterator;
-            this.index = initData.index;
-        }
-        console.log(initData);
+        super(initData);
     }
 }
 
