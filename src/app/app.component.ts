@@ -4,57 +4,58 @@ import {IDynamicInstantiatable} from "../jigsaw/component/common";
 
 @Component({
     selector: 'complete-component',
-    template: `CompleteComponent2: <jigsaw-button (click)="onClick()">{{$iter}} @ {{$index}}</jigsaw-button>`
+    template: `CompleteComponent2:
+    <jigsaw-button (click)="onClick()">{{it}} @ {{index}}</jigsaw-button>`
 })
 export class CompleteComponent2 implements IDynamicInstantiatable {
-    public $iter: any;
-    public $index: number;
+    public it: any;
+    public index: number;
 
     constructor(public initData: InitData) {
-        if (this.initData) {
-            this.$iter = this.initData.iterator;
-            this.$index = this.initData.index;
+        if (initData) {
+            this.it = initData.iterator;
+            this.index = initData.index;
         }
-        console.log(this.initData);
+        console.log(initData);
     }
 
     onClick() {
-        alert(this.$iter)
+        alert(this.it)
     }
 }
 @Component({
     selector: 'complete-component',
-    template: `CompleteComponent1: {{$iter}} @ {{$index}}`
+    template: `CompleteComponent1: {{it}} @ {{index}}`
 })
 export class CompleteComponent1 implements IDynamicInstantiatable {
-    public $iter: any;
-    public $index: number;
+    public it: any;
+    public index: number;
 
     constructor(public initData: InitData) {
-        if (this.initData) {
-            this.$iter = this.initData.iterator;
-            this.$index = this.initData.index;
+        if (initData) {
+            this.it = initData.iterator;
+            this.index = initData.index;
         }
-        console.log(this.initData);
+        console.log(initData);
     }
 }
 
 @Component({
     selector: 'complete-component-p',
     template: `
-        <awade-iterative-container [data]="$iter.list" [iterateWith]="$iter.child"></awade-iterative-container>
+        <awade-iterative-container [data]="it.list" [iterateWith]="it.child"></awade-iterative-container>
     `
 })
 export class CompleteComponentP implements IDynamicInstantiatable {
-    public $iter: any;
-    public $index: number;
+    public it: any;
+    public index: number;
 
     constructor(public initData: InitData) {
-        if (this.initData) {
-            this.$iter = this.initData.iterator;
-            this.$index = this.initData.index;
+        if (initData) {
+            this.it = initData.iterator;
+            this.index = initData.index;
         }
-        console.log(this.initData);
+        console.log(initData);
     }
 }
 

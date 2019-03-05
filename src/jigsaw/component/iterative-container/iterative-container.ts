@@ -9,8 +9,10 @@ export class InitData {
 @Component({
     selector: 'awade-iterative-container',
     template: `
-        <div *ngFor="let item of data; let idx = index;">
-            <ng-container *ngComponentOutlet="iterateWith; injector: createInjector(item, idx)">
+        <div>
+            <ng-container *ngFor="let item of data; let idx = index;">
+                <ng-container *ngComponentOutlet="iterateWith; injector: createInjector(item, idx)">
+                </ng-container>
             </ng-container>
         </div>
     `
