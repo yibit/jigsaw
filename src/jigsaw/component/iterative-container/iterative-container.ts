@@ -1,4 +1,4 @@
-import {Component, Injector, Input, NgIterable, OnDestroy, Type} from "@angular/core";
+import {Component, InjectionToken, Injector, Input, NgIterable, OnDestroy, Type} from "@angular/core";
 import {IDynamicInstantiatable} from "../common";
 
 export class InitData {
@@ -21,6 +21,8 @@ export class InitData {
     first: boolean;
     last: boolean;
 }
+
+export const InitDataInjectionToken = new InjectionToken<InitData>('awade-repeat-container-init-data');
 
 @Component({
     selector: 'awade-iterative-container',
@@ -72,7 +74,7 @@ export class IterativeContainerComponent implements OnDestroy {
 
         const useValue: any = {it, index, odd, even, first, last};
         const injector = Injector.create({
-            providers: [{provide: InitData, useValue: useValue}],
+            providers: [{provide: InitDataInjectionToken, useValue: useValue}],
             parent: this._injector
         });
         this._injectors[index] = injector;

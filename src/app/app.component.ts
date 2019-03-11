@@ -1,5 +1,5 @@
-import {Component, ViewEncapsulation} from "@angular/core";
-import {InitData} from "../jigsaw/component/iterative-container/iterative-container";
+import {Component, Inject, ViewEncapsulation} from "@angular/core";
+import {InitData, InitDataInjectionToken} from "../jigsaw/component/iterative-container/iterative-container";
 import {IDynamicInstantiatable} from "../jigsaw/component/common";
 
 @Component({
@@ -8,7 +8,7 @@ import {IDynamicInstantiatable} from "../jigsaw/component/common";
     <jigsaw-input [placeholder]="it + '@' + index + '@' + odd"></jigsaw-input>`
 })
 export class CompleteComponent2 extends InitData implements IDynamicInstantiatable {
-    constructor(public initData: InitData) {
+    constructor(@Inject(InitDataInjectionToken) public initData: InitData) {
         super(initData);
         console.log(this.initData);
     }
@@ -35,7 +35,7 @@ export class CompleteComponent2 extends InitData implements IDynamicInstantiatab
     `
 })
 export class CompleteComponent1 extends InitData implements IDynamicInstantiatable {
-    constructor(public initData: InitData) {
+    constructor(@Inject(InitDataInjectionToken) public initData: InitData) {
         super(initData);
     }
 }
@@ -47,7 +47,7 @@ export class CompleteComponent1 extends InitData implements IDynamicInstantiatab
     `
 })
 export class CompleteComponentP extends InitData implements IDynamicInstantiatable {
-    constructor(public initData: InitData) {
+    constructor(@Inject(InitDataInjectionToken) public initData: InitData) {
         super(initData);
     }
 }
