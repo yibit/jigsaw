@@ -1,0 +1,39 @@
+#!/usr/bin/env node
+let argv = require('yargs')
+    .option('u', {
+        alias : 'user',
+        demand: true,
+        default: 'tom',
+        describe: 'user name',
+        type: 'string'
+    })
+    .option('p', {
+        alias : 'project',
+        demand: true,
+        default: 'app',
+        describe: 'your project',
+        type: 'string'
+    })
+    .option('v', {
+        alias : 'version',
+        boolean: false,
+        describe: 'the version of this compiler',
+        type: 'boolean'
+    })
+    .argv;
+
+if (argv.version) {
+    const packageInfo = require('../../../../web/package');
+    console.log(`the current awade compiler version: v${packageInfo.version}`);
+    process.exit(0);
+}
+
+let shell = require("shelljs");
+shell.exec("echo hello " + argv.user + ", your project is " + argv.project);
+
+let awadeu = require('./awadeu.js');
+if(shell.pwd().match(/bin[/\\]?$/)) {
+    shell.cd("../../../../../../");
+}
+awadeu.upgradeProject(argv.user, argv.project);
+

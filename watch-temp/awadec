@@ -1,0 +1,236 @@
+#!/usr/bin/env node
+
+let uuid = require('uuid').v4;
+
+let argv = require('yargs')
+    .option('u', {
+        alias : 'user',
+        default: 'awadec',
+        describe: 'internal use ONLY, user name',
+        type: 'string'
+    })
+    .option('p', {
+        alias : 'project',
+        default: 'project-'+ uuid(),
+        describe: 'internal use ONLY, your project',
+        type: 'string'
+    })
+    .option('i', {
+        alias : 'input',
+        describe: 'user project input path, it should be a .zip file or a dir',
+        type: 'string'
+    })
+    .option('o', {
+        alias : 'output',
+        describe: 'output path, it should be a .zip file or a dir',
+        type: 'string'
+    })
+    .option('v', {
+        alias : 'version',
+        boolean: false,
+        describe: 'the version of this compiler',
+        type: 'boolean'
+    })
+    .option('publish', {
+        boolean: true,
+        describe: 'generate product code'
+    })
+    .option('--ng-build-options--', {
+        describe: `
+--target (String) (Default: development) Defines the build target.
+    aliases: -t <value>, -dev (--target=development), -prod (--target=production), --target <value>
+    
+--environment (String) Defines the build environment.
+    aliases: -e <value>, --environment <value>
+    
+--output-path (Path) Path where output will be placed.
+    aliases: -op <value>, --outputPath <value>
+    
+--aot (Boolean) Build using Ahead of Time compilation.
+    aliases: -aot
+    
+--sourcemaps (Boolean) Output sourcemaps.
+    aliases: -sm, --sourcemap, --sourcemaps
+
+--vendor-chunk (Boolean) Use a separate bundle containing only vendor libraries.
+    aliases: -vc, --vendorChunk
+    
+--common-chunk (Boolean) (Default: true) Use a separate bundle containing code used across multiple bundles.
+    aliases: -cc, --commonChunk
+    
+--base-href (String) Base url for the application being built.
+    aliases: -bh <value>, --baseHref <value>
+    
+--deploy-url (String) URL where files will be deployed.
+    aliases: -d <value>, --deployUrl <value>
+    
+--verbose (Boolean) (Default: false) Adds more details to output logging.
+    aliases: -v, --verbose
+    
+--progress (Boolean) (Default: false) Log progress to the console while building.
+    aliases: -pr, --progress
+    
+--i18n-file (String) Localization file to use for i18n.
+    aliases: --i18nFile <value>
+    
+--i18n-format (String) Format of the localization file specified with --i18n-file.
+    aliases: --i18nFormat <value>
+    
+--locale (String) Locale to use for i18n.
+    aliases: --locale <value>
+    
+--missing-translation (String) How to handle missing translations for i18n.
+    aliases: --missingTranslation <value>
+    
+--extract-css (Boolean) Extract css from global styles onto css files instead of js ones.
+    aliases: -ec, --extractCss
+    
+--watch (Boolean) (Default: false) Run build when files change.
+    aliases: -w, --watch
+    
+--output-hashing=none|all|media|bundles (String) Define the output filename cache-busting hashing mode.
+    aliases: -oh <value>, --outputHashing <value>
+    
+--poll (Number) Enable and define the file watching poll time period (milliseconds).
+    aliases: -poll <value>
+    
+--app (String) Specifies app name or index to use.
+    aliases: -a <value>, -app <value>
+    
+--delete-output-path (Boolean) (Default: true) Delete output path before build.
+    aliases: -dop, --deleteOutputPath
+    
+--preserve-symlinks (Boolean) (Default: false) Do not use the real path when resolving modules.
+    aliases: --preserveSymlinks
+    
+--extract-licenses (Boolean) (Default: true) Extract all licenses in a separate file, in the case of production builds only.
+    aliases: --extractLicenses
+    
+--show-circular-dependencies (Boolean) (Default: true) Show circular dependency warnings on builds.
+    aliases: -scd, --showCircularDependencies
+    
+--build-optimizer (Boolean) Enables @angular-devkit/build-optimizer optimizations when using '--aot'.
+    aliases: --buildOptimizer
+    
+--named-chunks (Boolean) Use file name for lazy loaded chunks.
+    aliases: -nc, --namedChunks
+    
+--subresource-integrity (Boolean) (Default: false) Enables the use of subresource integrity validation.
+    aliases: -sri, --subresourceIntegrity
+    
+--bundle-dependencies (none, all) (Default: none) Available on server platform only. Which external dependencies to bundle into the module. By default, all of node_modules will be kept as requires.
+    aliases: --bundleDependencies <value>
+    
+--service-worker (Boolean) (Default: true) Generates a service worker config for production builds, if the app has service worker enabled.
+    aliases: -sw, --serviceWorker
+    
+--skip-app-shell (Boolean) (Default: false) Flag to prevent building an app shell
+    aliases: --skipAppShell
+    
+--stats-json (Boolean) (Default: false) Generates a 'stats.json' file which can be analyzed using tools such as: 'webpack-bundle-analyzer' or https://webpack.github.io/analyse.
+    aliases: --statsJson
+
+        `,
+    })
+    .usage('Usage: awadec [options] [ng build options]')
+    .example('awadec -i d:/project/svd-files -o d:/project/export --bh /rdk/app/newProject/web/', '---输入svd，导出代码（包含源码和ngb代码），可配置ngb的参数')
+    .example('awadec -i d:/project/svd-files.zip -o d:/project/export/code.zip --bh /rdk/app/newProject/web/', '---输入svd的zip包，导出代码（包含源码和ngb代码），可配置ngb的参数')
+    .example('awadec -u tom -p new_project -o d:/project/export/code.zip --bh /rdk/app/newProject/web/', '---现有项目导出代码')
+    .help('h')
+    .alias('h', 'help')
+    .epilog('copyright 2019')
+    .argv;
+
+if (argv.version) {
+    const packageInfo = require('../../../../web/package');
+    console.log(`the current awade compiler version: v${packageInfo.version}`);
+    process.exit(0);
+}
+
+let argvForNg = {};
+
+for(let key in argv) {
+    if(!key.match(/^(_|\$0|u|user|p|project|i|input|o|output|publish|output-path|h|help|--ng-build-options--|.*[A-Z]+.*)$/)) {
+        argvForNg[key] = argv[key]
+    }
+}
+
+// 用于jigsaw的TimeService
+global.moment = require('moment');
+// 用于ngx-perfect-scrollbar模拟dom
+global.Element = {prototype: {}};
+global.document = {documentElement: {style:{}}};
+global.window = {_dummy_window_: true};
+global.navigator = {};
+
+let shell = require("shelljs");
+let path = require("path");
+
+argv.input = argv.input ? path.resolve(argv.input) : argv.input;
+argv.output = argv.output ? path.resolve(argv.output) : argv.output;
+
+// 请不要移动此处的位置
+let awadec = require('./awadec.js');
+let awadeu = require('./awadeu.js');
+
+shell.cd(path.join(__dirname, "../../../../../../"));
+
+if(process.platform.indexOf('win') !== -1) {
+    process.env.PATH = path.join(shell.pwd().toString(), '/tools/mock-shell/usr/bin/') + ';' + process.env.PATH;
+}
+
+if(argv.input) {
+    argv.user = 'awadec';
+    let createResult = awadec.create(argv.user,argv.project, argv.input, 'a new app');
+    if(!createResult) {
+        process.exit(1);
+    }
+}
+
+shell.exec("echo hello " + argv.user + ", your project is " + argv.project);
+
+console.log('------------start to upgrade project------------');
+let upgradeResult = awadeu.upgradeProject(argv.user, argv.project);
+if(upgradeResult) {
+    console.log('------------upgrade project success!-----------');
+} else {
+    console.error('------------upgrade project failed!------------');
+    process.exit(1);
+}
+
+console.log('------------generate code start-----------');
+awadec.generate(argv.user, argv.project, argv.publish ? 'prod' : 'preview');
+console.log('------------generate code success!------------');
+
+if(argv.output) {
+    console.log('------------export code start------------');
+
+    // 注意！base-href 的值不能是斜杠（ / ）开头的，windows下的bash会将其转为一个奇怪的路径
+    if(argvForNg['base-href']) {
+        argvForNg['base-href'] = `"${argvForNg['base-href'].replace(/^\//, '&#x2f;')}"`;
+    } else if(argvForNg['bh']) {
+        argvForNg['bh'] = `"${argvForNg['bh'].replace(/^\//, '&#x2f;')}"`;
+    } else {
+        argvForNg['base-href'] = `"&#x2f;rdk/app/${argv.project}/web/"`
+    }
+
+    let argvForNgStr = '';
+    for(let key in argvForNg) {
+        argvForNgStr += `--${key} ${argvForNg[key]} `
+    }
+
+    let exportResult = awadec.exportCode(argv.user, argv.project, argv.output, argvForNgStr);
+    if(exportResult) {
+        console.log('------------export code success!------------');
+        console.log('your file is in ' + exportResult);
+    } else {
+        console.error('------------export code failed!------------');
+        process.exit(1);
+    }
+}
+
+if(argv.user === 'awadec') {
+    awadec.clearCode('awadec', argv.project);
+}
+
+process.exit(0);

@@ -2,21 +2,28 @@ import * as fs from "fs";
 import * as ts from "typescript";
 import * as chokidar from "chokidar";
 import * as path from "path";
+import * as MD5 from "md5.js";
+import * as http from "http";
+import {sync as mkdir} from "mkdirp";
 
-const entryFile = normalizePath(`${__dirname}/src/exports.ts`);
-const outFile = normalizePath(`${__dirname}/dist/out.js`);
-
-fs.unlinkSync(outFile);
 
 const scriptFileNames: string[] = [];
+type ChangeEvent = 'add' | 'change' | 'unlink' | 'ref';
+type Change = { compiled?: string, path: string, processed?: boolean, event: ChangeEvent };
+const rootPath = normalizePath(`${__dirname}/../../`);
+
 const scriptVersions = new Map<string, number>();
-const srcRoot = normalizePath(path.join(__dirname, 'src'));
+const srcRoot = normalizePath(path.join(__dirname, '../../'));
 const servicesHost: ts.LanguageServiceHost = {
     getScriptFileNames: () => scriptFileNames,
     getScriptVersion: fileName => String(scriptVersions.get(fileName)),
-    getScriptSnapshot: file => fs.existsSync(file) ? ts.ScriptSnapshot.fromString(fs.readFileSync(file).toString()) : undefined,
+    getScriptSnapshot: getScriptSnapshot,
     getCurrentDirectory: () => srcRoot,
-    getCompilationSettings: () => ({module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES5}),
+    getCompilationSettings: () => ({
+        module: ts.ModuleKind.CommonJS,
+        target: ts.ScriptTarget.ES5,
+        experimentalDecorators: true
+    }),
     getDefaultLibFileName: options => ts.getDefaultLibFilePath(options),
     fileExists: ts.sys.fileExists,
     readFile: ts.sys.readFile,
@@ -24,10 +31,10 @@ const servicesHost: ts.LanguageServiceHost = {
 };
 const services = ts.createLanguageService(servicesHost, ts.createDocumentRegistry());
 
-const watcher = chokidar.watch('src', {
-    ignored: /(^|[\/\\])\../,
-    usePolling: true,
-    interval: 300,
+const watchingDirs = ['../../basics/src', '../../compiler/module/src', '../../services/src'/*, '../../web/src'*/, '../../sdk/src'];
+const watcher = chokidar.watch(watchingDirs, {
+    ignored: /(.+\.(___jb_tmp___|svg)$)|(awade[cu].*)|(package(-lock)?\.json)/,
+    persistent: true,
     awaitWriteFinish: {
         stabilityThreshold: 500,
         pollInterval: 100
@@ -38,12 +45,19 @@ watcher
     .on('change', path => cacheChange(path, 'change'))
     .on('unlink', path => cacheChange(path, 'unlink'));
 
-type Change = { compiled?: string, path: string, event: 'add' | 'change' | 'unlink' };
-const changes: Change[] = [];
-const nodeModules: string[] = [];
 let timerHandler = null;
 
+const changes: Change[] = [];
 function cacheChange(path: string, event: 'add' | 'change' | 'unlink'): void {
+    let sign;
+    if (event == 'unlink') {
+        sign = '-';
+    } else if (event == 'change') {
+        sign = '*';
+    } else {
+        sign = '+';
+    }
+    console.log(`(${sign}) : ${path}`);
     const idx = changes.findIndex(ch => ch.path == path && ch.event == event);
     if (idx != -1) {
         changes.splice(idx, 1);
@@ -59,24 +73,29 @@ function cacheChange(path: string, event: 'add' | 'change' | 'unlink'): void {
 }
 
 function handleChanges(): void {
-    nodeModules.splice(0, Infinity);
-    changes.forEach((change: Change) => {
-        console.log('Handling file', change.path);
+    let needCreateServices = false;
+    while (changes.length > 0) {
+        const change = changes.shift();
+        if (!change) {
+            break;
+        }
+
+        // console.log('Handling file', change.path);
         updateScriptFileNames(change.path, change.event);
-        logErrors(change.path);
-        let output = services.getEmitOutput(change.path);
-        change.compiled = output.outputFiles[0].text;
-        fixRequires(change);
-    });
-    if (fs.existsSync(outFile)) {
-        updateOutFile(changes, nodeModules);
-    } else {
-        createOutFile(changes, nodeModules);
+        console.log('Processing file', change.path);
+        compileScript(change.path);
+        needCreateServices = needCreateServices || isInServices(change.path);
     }
-    changes.splice(0, Infinity);
+    if (needCreateServices) {
+        createServices();
+    }
 }
 
-function updateScriptFileNames(path: string, event: 'add' | 'change' | 'unlink'): void {
+function updateScriptFileNames(path: string, event: ChangeEvent): void {
+    if (!path.match(/.+\.ts/i)) {
+        return;
+    }
+
     const idx = scriptFileNames.indexOf(path);
     if (event == 'unlink' && idx != -1) {
         scriptFileNames.splice(idx, 1);
@@ -91,72 +110,57 @@ function updateScriptFileNames(path: string, event: 'add' | 'change' | 'unlink')
     scriptVersions.set(path, ver == undefined || ver == null ? 0 : ver + 1);
 }
 
-function fixRequires(change: Change): void {
-    const curPath = getPath(change.path);
-    change.compiled = change.compiled.replace(/\brequire\("(.*?)"\)/g, (found, pkg) => {
+function createServices() {
+    console.log(scriptFileNames.filter(s => s.match(/awade-iframe-default-page/)));
+    console.log('Creating services ...');
+
+    const entryFile = normalizePath(`${__dirname}/compiled/services/src/exports.js`);
+    const pending: string[] = [entryFile];
+    const buffer = new Map<string, string>();
+    const parse = (curPath, pkg) => {
         if (fs.existsSync(`${__dirname}/node_modules/${pkg}/package.json`)) {
-            nodeModules.push(pkg);
+            if (!buffer.has(pkg)) {
+                const pkgInfo = require(`${__dirname}/node_modules/${pkg}/package.json`);
+                if (!pkgInfo.main) {
+                    throw new Error("Error: invalid required node_modules: " + pkg);
+                }
+                buffer.set(pkg, fs.readFileSync(`${__dirname}/node_modules/${pkg}/${pkgInfo.main}`).toString());
+            }
         } else {
-            pkg = path.resolve(curPath, pkg + '.ts');
+            pkg = path.resolve(curPath, pkg + '.js');
             pkg = normalizePath(pkg);
+            if (!pending.find(p => p == pkg) && !buffer.has(pkg)) {
+                pending.push(pkg);
+            }
         }
-        return `__webpack_require__("${pkg}")`
-    });
-}
+        return pkg;
+    };
+    const consoleDef = `var console = __webpack_require__("${normalizePath(__dirname)}/compiled/services/src/utils/log.js");`;
+    while (pending.length > 0) {
+        const file = pending.shift();
+        const curPath = getPath(file);
+        let compiled = fs.readFileSync(file).toString()
+            .replace(/\b__export\(require\("(.*?)"\)\);/g, (found, pkg) => {
+                pkg = parse(curPath, pkg);
+                return `__export(__webpack_require__("${pkg}"));`;
+            })
+            .replace(/(var \w+) = require\("(.*?)"\);/g, (found, varDef, pkg) => {
+                pkg = parse(curPath, pkg);
+                return `${varDef} = __webpack_require__("${pkg}");`;
+            });
+        if (compiled.indexOf(consoleDef) == -1) {
+            // 给自动加上console的定义
+            compiled = `${consoleDef}\n${compiled}`;
+        }
 
-function updateOutFile(changes: Change[], nodeModules: string[]): void {
-    // 需要时才从磁盘上读进来，是为了节约内存
-    let out = fs.readFileSync(outFile).toString();
-    [...changes, ...nodeModules.map(pkg => {
-        const pkgInfo = require(`${__dirname}/node_modules/${pkg}/package.json`);
-        if (!pkgInfo.main) {
-            console.error("Error: invalid required node_modules: ", pkg);
-            return null;
-        }
-        const script = fs.readFileSync(`${__dirname}/node_modules/${pkg}/${pkgInfo.main}`).toString();
-        return {path: pkg, event: 'add', compiled: script} as Change;
-    })].filter(ch => ch != null).forEach(change => {
-        const re = new RegExp(`(/\\*\\*\\*/ "${change.path}":\\s*)[\\s\\S]*?(// EoF: ${change.path}\\s/\\*\\*\\*/ }\\),)`);
-        if (change.event == 'unlink') {
-            out = out.replace(re, '');
-            return;
-        }
-        const match = out.match(re);
-        if (match) {
-            out = out.replace(re, `$1/***/ (function(module, exports, __webpack_require__) {\n${change.compiled}$2`);
-        } else {
-            out = out.replace(/(\/\/ EoC\s*\/\*\*\*\*\*\*\/ }\);)/, `
-/***/ "${change.path}":
-/***/ (function(module, exports, __webpack_require__) {
-${change.compiled}
-// EoF: ${change.path}
-/***/ }),
+        buffer.set(file, compiled);
+    }
 
-$1`);
-        }
-    });
-    fs.writeFileSync(outFile, out);
-}
-
-function createOutFile(changes: Change[], nodeModules: string[]): void {
     let out = '';
-    changes.forEach(change => {
-        out += `/***/ "${change.path}":\n`;
+    buffer.forEach((compiled, path) => {
+        out += `/***/ "${path}":\n`;
         out += '/***/ (function(module, exports, __webpack_require__) {\n';
-        out += change.compiled + '\n';
-        out += `// EoF: ${change.path}\n`;
-        out += '/***/ }),\n\n';
-    });
-    nodeModules.forEach(pkg => {
-        const pkgInfo = require(`${__dirname}/node_modules/${pkg}/package.json`);
-        if (!pkgInfo.main) {
-            console.error("Error: invalid required node_modules: ", pkg);
-            return;
-        }
-        out += `/***/ "${pkg}":\n`;
-        out += '/***/ (function(module, exports, __webpack_require__) {\n';
-        out += fs.readFileSync(`${__dirname}/node_modules/${pkg}/${pkgInfo.main}`) + '\n';
-        out += `// EoF: ${pkg}\n`;
+        out += compiled + '\n';
         out += '/***/ }),\n\n';
     });
 
@@ -230,10 +234,11 @@ function createOutFile(changes: Change[], nodeModules: string[]): void {
 
 ${out}
 
-// EoC
 /******/ });
     `;
+    const outFile = normalizePath(`${rootPath}/server/dist/awade-services.js`);
     fs.writeFileSync(outFile, out);
+    reinit();
 }
 
 function normalizePath(file: string): string {
@@ -244,6 +249,33 @@ function getPath(file: string): string {
     const tmp = file.split(/\//);
     tmp.pop();
     return tmp.join('/');
+}
+
+function compileScript(file: string): string {
+    if (!file.match(/.+\.ts$/)) {
+        return '';
+    }
+
+    const compiledPath = normalizePath(file.replace(rootPath, `${__dirname}/compiled`))
+        .replace(/\.ts$/, '.js');
+    let fingerPrint, md5Path = compiledPath.replace(/\.js/, '.md5');
+    if (fs.existsSync(md5Path)) {
+        fingerPrint = fs.readFileSync(md5Path).toString();
+    }
+    const source = fs.readFileSync(file);
+    const curMD5 = new MD5().update(source).digest('hex');
+    if (curMD5 == fingerPrint) {
+        return fs.readFileSync(compiledPath).toString();
+    }
+
+    console.log('Compiling...');
+    logErrors(file);
+    let output = services.getEmitOutput(file).outputFiles[0].text;
+    mkdir(getPath(compiledPath));
+    fs.writeFileSync(compiledPath, output);
+    fs.writeFileSync(md5Path, curMD5);
+
+    return output;
 }
 
 function logErrors(fileName: string): void {
@@ -265,4 +297,28 @@ function logErrors(fileName: string): void {
             console.log(`  Error: ${message}`);
         }
     });
+}
+
+function getScriptSnapshot(file: string): ts.IScriptSnapshot {
+    if (!fs.existsSync(file)) {
+        return undefined;
+    }
+    let script = fs.readFileSync(file).toString();
+    return ts.ScriptSnapshot.fromString(script);
+}
+
+function isInServices(file: string): boolean {
+    return !!file.match(/.*\/services\/src\/.*/);
+}
+
+function reinit(): void {
+    const options = {
+        host: '127.0.0.1', port: 5812, path: '/rdk/service/app/ui-designer/server/reinit'
+    };
+    const req = http.request(options);
+    req.on('error', (e) => {
+        console.log('unable to reinit, detail: ', e.message);
+    });
+    req.end();
+    console.log('Reinitializing request sent!');
 }
