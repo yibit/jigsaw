@@ -5,11 +5,12 @@ import * as path from "path";
 import * as MD5 from "md5.js";
 import * as http from "http";
 import {sync as mkdir} from "mkdirp";
+import {find} from "shelljs";
 
 
 const scriptFileNames: string[] = [];
 type ChangeEvent = 'add' | 'change' | 'unlink' | 'ref';
-type Change = { compiled?: string, path: string, processed?: boolean, event: ChangeEvent };
+type Change = { compiled?: string, path: string, event: ChangeEvent };
 const rootPath = normalizePath(`${__dirname}/../../`);
 
 const scriptVersions = new Map<string, number>();
@@ -33,7 +34,7 @@ const services = ts.createLanguageService(servicesHost, ts.createDocumentRegistr
 
 const watchingDirs = ['../../basics/src', '../../compiler/module/src', '../../services/src'/*, '../../web/src'*/, '../../sdk/src'];
 const watcher = chokidar.watch(watchingDirs, {
-    ignored: /(.+\.(___jb_tmp___|svg)$)|(awade[cu].*)|(package(-lock)?\.json)/,
+    ignored: /(.+\.(___jb_tmp___|\.d\.ts)$)|(awade[cu]\.js)|(package(-lock)?\.json)/,
     persistent: true,
     awaitWriteFinish: {
         stabilityThreshold: 500,
@@ -46,8 +47,8 @@ watcher
     .on('unlink', path => cacheChange(path, 'unlink'));
 
 let timerHandler = null;
-
 const changes: Change[] = [];
+
 function cacheChange(path: string, event: 'add' | 'change' | 'unlink'): void {
     let sign;
     if (event == 'unlink') {
@@ -73,7 +74,7 @@ function cacheChange(path: string, event: 'add' | 'change' | 'unlink'): void {
 }
 
 function handleChanges(): void {
-    let needCreateServices = false;
+    const processed = [];
     while (changes.length > 0) {
         const change = changes.shift();
         if (!change) {
@@ -84,11 +85,17 @@ function handleChanges(): void {
         updateScriptFileNames(change.path, change.event);
         console.log('Processing file', change.path);
         compileScript(change.path);
-        needCreateServices = needCreateServices || isInServices(change.path);
+        processed.push(change.path.substring(rootPath.length + 1).replace(/\.ts$/, '.js'));
     }
-    if (needCreateServices) {
-        createServices();
-    }
+    createServerBundle(processed,
+        normalizePath(`${__dirname}/compiled/services/src/exports.js`),
+        normalizePath(`${rootPath}/server/dist/awade-services.js`));
+    createServerBundle(processed,
+        normalizePath(`${__dirname}/compiled/compiler/module/src/bin/awadec.js`),
+        normalizePath(`${rootPath}/compiler/module/src/bin/awadec.js`));
+    createServerBundle(processed,
+        normalizePath(`${__dirname}/compiled/compiler/module/src/bin/awadeu.js`),
+        normalizePath(`${rootPath}/compiler/module/src/bin/awadeu.js`));
 }
 
 function updateScriptFileNames(path: string, event: ChangeEvent): void {
@@ -110,21 +117,23 @@ function updateScriptFileNames(path: string, event: ChangeEvent): void {
     scriptVersions.set(path, ver == undefined || ver == null ? 0 : ver + 1);
 }
 
-function createServices() {
-    console.log(scriptFileNames.filter(s => s.match(/awade-iframe-default-page/)));
-    console.log('Creating services ...');
-
-    const entryFile = normalizePath(`${__dirname}/compiled/services/src/exports.js`);
+function createServerBundle(changedFiles: string[], entryFile: string, outFile: string): void {
+    const isCreatingServices = entryFile.indexOf('services/src/exports.js') != -1;
     const pending: string[] = [entryFile];
     const buffer = new Map<string, string>();
     const parse = (curPath, pkg) => {
-        if (fs.existsSync(`${__dirname}/node_modules/${pkg}/package.json`)) {
+        const pkgJson = `${__dirname}/node_modules/${pkg}/package.json`;
+        if (fs.existsSync(pkgJson)) {
             if (!buffer.has(pkg)) {
-                const pkgInfo = require(`${__dirname}/node_modules/${pkg}/package.json`);
-                if (!pkgInfo.main) {
-                    throw new Error("Error: invalid required node_modules: " + pkg);
+                if (isCreatingServices) {
+                    const pkgInfo = require(pkgJson);
+                    if (!pkgInfo.main) {
+                        throw new Error("Error: invalid required node_modules: " + pkg);
+                    }
+                    buffer.set(pkg, fs.readFileSync(`${__dirname}/node_modules/${pkg}/${pkgInfo.main}`).toString());
+                } else {
+                    buffer.set(pkg, `module.exports = require("${pkg}");`);
                 }
-                buffer.set(pkg, fs.readFileSync(`${__dirname}/node_modules/${pkg}/${pkgInfo.main}`).toString());
             }
         } else {
             pkg = path.resolve(curPath, pkg + '.js');
@@ -135,9 +144,16 @@ function createServices() {
         }
         return pkg;
     };
-    const consoleDef = `var console = __webpack_require__("${normalizePath(__dirname)}/compiled/services/src/utils/log.js");`;
+    const logFile = `${normalizePath(__dirname)}/compiled/services/src/utils/log.js`;
+    const consoleDef = `var console = __webpack_require__("${logFile}");`;
+    let needToCreate = false;
     while (pending.length > 0) {
         const file = pending.shift();
+        if (!fs.existsSync(file)) {
+            continue;
+        }
+
+        needToCreate = needToCreate || !!changedFiles.find(ch => file.indexOf(ch) != -1);
         const curPath = getPath(file);
         let compiled = fs.readFileSync(file).toString()
             .replace(/\b__export\(require\("(.*?)"\)\);/g, (found, pkg) => {
@@ -148,7 +164,7 @@ function createServices() {
                 pkg = parse(curPath, pkg);
                 return `${varDef} = __webpack_require__("${pkg}");`;
             });
-        if (compiled.indexOf(consoleDef) == -1) {
+        if (compiled.indexOf(consoleDef) == -1 && isCreatingServices && logFile != file) {
             // 给自动加上console的定义
             compiled = `${consoleDef}\n${compiled}`;
         }
@@ -156,6 +172,12 @@ function createServices() {
         buffer.set(file, compiled);
     }
 
+    if (!needToCreate) {
+        buffer.clear();
+        return;
+    }
+
+    console.log(`Creating bundle ${outFile} ...`);
     let out = '';
     buffer.forEach((compiled, path) => {
         out += `/***/ "${path}":\n`;
@@ -163,6 +185,7 @@ function createServices() {
         out += compiled + '\n';
         out += '/***/ }),\n\n';
     });
+    buffer.clear();
 
     out = `
 /******/ (function(modules) { // webpackBootstrap
@@ -236,9 +259,15 @@ ${out}
 
 /******/ });
     `;
-    const outFile = normalizePath(`${rootPath}/server/dist/awade-services.js`);
+    if (!isCreatingServices) {
+        // creating awadec / awadeu
+        out = 'module.exports=\n' + out;
+    }
     fs.writeFileSync(outFile, out);
-    reinit();
+
+    if (isCreatingServices) {
+        reinit();
+    }
 }
 
 function normalizePath(file: string): string {
@@ -305,10 +334,6 @@ function getScriptSnapshot(file: string): ts.IScriptSnapshot {
     }
     let script = fs.readFileSync(file).toString();
     return ts.ScriptSnapshot.fromString(script);
-}
-
-function isInServices(file: string): boolean {
-    return !!file.match(/.*\/services\/src\/.*/);
 }
 
 function reinit(): void {
