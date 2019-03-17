@@ -1,0 +1,37 @@
+<jigsaw-root>
+    <div class="rows">
+        <div class="row">
+            <span class="label">声母</span>
+            <jigsaw-tile-lite [(selectedItems)]="selectedInitials" [data]="initials"
+                              optionWidth=36 [multipleSelect]="true">
+            </jigsaw-tile-lite>
+
+            <jigsaw-button colorType="error" (click)="nextPinyin()" [disabled]="
+                     selectedInitials.length == 0 && selectedVowels.length == 0 && selectedWholeTone.length == 0">
+                下一个
+            </jigsaw-button>
+        </div>
+
+        <div class="row">
+            <span class="label">韵母</span>
+            <jigsaw-tile-lite [(selectedItems)]="selectedVowels" [data]="vowels"
+                              optionWidth=36 [multipleSelect]="true">
+            </jigsaw-tile-lite>
+        </div>
+
+        <div class="row">
+            <span class="label">整体认读音节</span>
+            <jigsaw-tile-lite [(selectedItems)]="selectedWholeTone" [data]="wholeSyllable"
+                              optionWidth=40 [multipleSelect]="true">
+            </jigsaw-tile-lite>
+
+            <span class="label in-line-label">音调</span>
+            <jigsaw-tile-lite [(selectedItems)]="selectedTones" [data]="tones"
+                              optionWidth=40 [multipleSelect]="true">
+            </jigsaw-tile-lite>
+        </div>
+    </div>
+    <p class="big-text">
+        {{pinyin}}
+    </p>
+</jigsaw-root>

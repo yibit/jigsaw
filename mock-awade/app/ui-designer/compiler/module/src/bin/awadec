@@ -1,0 +1,8 @@
+#!/usr/bin/env node
+
+let awadec = require('./awadec.js');
+let awadeu = require('./awadeu.js');
+
+awadec.awadec('fdfd');
+awadec.eee();
+awadec.ee1(11);

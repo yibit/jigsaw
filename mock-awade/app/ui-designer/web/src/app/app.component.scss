@@ -1,0 +1,28 @@
+.rows {
+    margin: 12px;
+}
+
+.row {
+    margin: 12px 0 12px 0;
+
+    .label {
+        font-size: 14px;
+        font-weight: normal;
+        color: #666;
+    }
+
+    .in-line-label {
+        padding-left: 12px;
+    }
+}
+
+jigsaw-button {
+    margin-left: 30px;
+}
+
+.big-text {
+    font-size: 200px;
+    color: #666;
+    text-align: center;
+}
+
