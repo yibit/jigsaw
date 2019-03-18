@@ -2,11 +2,13 @@ import {BrowserModule} from '@angular/platform-browser';
 import {NgModule} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {BrowserAnimationsModule} from '@angular/platform-browser/animations';
-import {TranslateModule, TranslateService} from "@ngx-translate/core";
+import {TranslateModule, TranslateService as TS} from "@ngx-translate/core";
+import {TranslateService} from "@ngx-translate/core/src/translate.service";
 import {JigsawModule} from '@rdkmaster/jigsaw';
 
 import {AppComponent} from './app.component';
 
+console.log('1111111111111111111', TS === TranslateService);
 
 @NgModule({
     declarations: [

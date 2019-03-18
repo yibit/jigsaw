@@ -6,11 +6,19 @@ import * as MD5 from "md5.js";
 import * as http from "http";
 import {sync as mkdir} from "mkdirp";
 
-
-const scriptFileNames: string[] = [];
+type ImportedFile = { from: string, type: "source" | "std_node_modules" | "non_std_node_modules" | "node_built_in" };
+type ImportedFileMap = { [path: string]: ImportedFile[] };
 type ChangeEvent = 'add' | 'change' | 'unlink' | 'ref';
 type Change = { compiled?: string, path: string, event: ChangeEvent };
 
+const builtInNodeModules = [
+    'assert', 'async_hooks', 'child_process', 'cluster', 'console', 'crypto', 'dns', 'domain', 'events', 'fs',
+    'http', 'http2', 'https', 'inspector', 'net', 'os', 'path', 'perf_hooks', 'punycode', 'querystring', 'readline',
+    'repl', 'stream', 'string_decoder', 'timers', 'tls', 'trace_events', 'tty', 'dgram', 'url', 'util', 'v8', 'vm',
+    'worker_threads', 'zlib'
+];
+
+const scriptFileNames: string[] = [];
 const compiledRootPath = normalizePath(`${__dirname}/compiled`);
 const rootPath = normalizePath(`${__dirname}/../..`);
 
@@ -36,7 +44,7 @@ const watchingDirs = [
     '../../basics/src', '../../compiler/module/src', '../../services/src', '../../web/src', '../../sdk/src'
 ];
 const watcher = chokidar.watch(watchingDirs, {
-    ignored: /(.+\.(___jb_\w+___|d\.ts|spec\.ts)$)|(awade[cu]\.js)|(package(-lock)?\.json)/,
+    ignored: /(.+\.(.*___jb_\w+___|d\.ts|spec\.ts)$)|(awade[cu]\.js)|(package(-lock)?\.json)/,
     persistent: true,
     awaitWriteFinish: {
         stabilityThreshold: 500,
@@ -50,12 +58,7 @@ watcher
 
 let timerHandler = null;
 const changes: Change[] = [];
-const involvedServiceFiles: string[] = [];
-const involvedAwadecFiles: string[] = [];
-const involvedAwadeuFiles: string[] = [];
-const involvedWebMainFiles: string[] = [];
-type ImportBuffer = {[path: string]: { from: string, type: "source" | "node_modules" }[]}
-const imports: ImportBuffer = initImports();
+const imports: ImportedFileMap = initImports();
 
 
 function cacheChange(path: string, event: 'add' | 'change' | 'unlink'): void {
@@ -67,7 +70,7 @@ function cacheChange(path: string, event: 'add' | 'change' | 'unlink'): void {
     } else {
         sign = '+';
     }
-    console.log(`(${sign}) : ${path}`);
+    console.log(`${sign} ): ${path}`);
     const idx = changes.findIndex(ch => ch.path == path && ch.event == event);
     if (idx != -1) {
         changes.splice(idx, 1);
@@ -97,31 +100,16 @@ function handleChanges(): void {
     }
     saveImports();
 
-    let involved = createServerBundle(processed, involvedServiceFiles,
+    createServerBundle(processed,
         normalizePath(`${compiledRootPath}/services/src/exports.js`),
         normalizePath(`${rootPath}/server/dist/awade-services.js`));
-    if (involved) {
-        involvedServiceFiles.splice(0, Infinity, ...involved);
-    }
-
-    involved = createServerBundle(processed, involvedAwadecFiles,
+    createServerBundle(processed,
         normalizePath(`${compiledRootPath}/compiler/module/src/bin/awadec.js`),
         normalizePath(`${rootPath}/compiler/module/src/bin/awadec.js`));
-    if (involved) {
-        involvedAwadecFiles.splice(0, Infinity, ...involved);
-    }
-
-    involved = createServerBundle(processed, involvedAwadeuFiles,
+    createServerBundle(processed,
         normalizePath(`${compiledRootPath}/compiler/module/src/bin/awadeu.js`),
         normalizePath(`${rootPath}/compiler/module/src/bin/awadeu.js`));
-    if (involved) {
-        involvedAwadeuFiles.splice(0, Infinity, ...involved);
-    }
-
-    involved = createWebMainBundle(processed);
-    if (involved) {
-        involvedWebMainFiles.splice(0, Infinity, ...involved);
-    }
+    createWebMainBundle(processed);
 }
 
 function updateFiles(sourcePath: string, event: ChangeEvent): void {
@@ -147,103 +135,48 @@ function updateFiles(sourcePath: string, event: ChangeEvent): void {
     scriptVersions.set(sourcePath, ver == undefined || ver == null ? 0 : ver + 1);
 }
 
-function createServerBundle(changedFiles: string[], involvedFiles: string[], entryFile: string, outFile: string): string[] {
-    if (!checkInvolved(changedFiles, involvedFiles)) {
-        return null;
+function createServerBundle(changedFiles: string[], entryFile: string, outFile: string): void {
+    const involved = traceInvolved(entryFile);
+    if (!checkInvolved(changedFiles, involved)) {
+        return;
     }
 
     const isCreatingServices = entryFile.indexOf('services/src/exports.js') != -1;
-    const pending: string[] = [entryFile];
-    const buffer = new Map<string, string>();
-    const parse = (curPath, pkg) => {
-        if (buffer.has(pkg)) {
-            return pkg;
-        }
-        const pkgJson = `${__dirname}/node_modules/${pkg}/package.json`;
-        if (fs.existsSync(pkgJson)) {
+    const logFile = `${normalizePath(__dirname)}/compiled/services/src/utils/log.js`;
+    const consoleDef = `var console = __webpack_require__("${logFile}");`;
+    // 编译好的块需要根据当前输出目标做一些具体化的处理
+    const processed = involved.map(module => {
+        const result = {content: '', from: module.from};
+        if (module.type == "std_node_modules") {
+            const pkgJson = `${__dirname}/node_modules/${module.from}/package.json`;
             if (isCreatingServices) {
                 const pkgInfo = require(pkgJson);
                 if (!pkgInfo.main) {
-                    throw new Error("Error: invalid required node_modules: " + pkg);
+                    throw new Error("Error: invalid required node_modules: " + module.from);
                 }
-                buffer.set(pkg, fs.readFileSync(`${__dirname}/node_modules/${pkg}/${pkgInfo.main}`).toString());
+                result.content = fs.readFileSync(`${__dirname}/node_modules/${module.from}/${pkgInfo.main}`).toString();
             } else {
-                buffer.set(pkg, `module.exports = require("${pkg}");`);
+                result.content = `module.exports = require("${module.from}");`;
             }
-            return pkg;
+        } else if (module.type == 'non_std_node_modules') {
+            throw new Error('non_std_node_modules in services: fix me!');
+        } else if (module.type == 'source') {
+            result.content = fs.readFileSync(module.from).toString();
+            if (isCreatingServices && result.content.indexOf(consoleDef) == -1 && logFile != module.from) {
+                result.content = `${consoleDef}\n${result.content}`;
+            }
         }
-
-        pkg = path.resolve(curPath, pkg + '.js');
-        pkg = normalizePath(pkg);
-        if (buffer.has(pkg)) {
-            return pkg;
-        }
-
-        if (!pending.find(p => p == pkg)) {
-            pending.push(pkg);
-        }
-        return pkg;
-
-
-        // const pkgJson = `${__dirname}/node_modules/${pkg}/package.json`;
-        // if (fs.existsSync(pkgJson)) {
-        //     if (!buffer.has(pkg)) {
-        //         if (isCreatingServices) {
-        //             const pkgInfo = require(pkgJson);
-        //             if (!pkgInfo.main) {
-        //                 throw new Error("Error: invalid required node_modules: " + pkg);
-        //             }
-        //             buffer.set(pkg, fs.readFileSync(`${__dirname}/node_modules/${pkg}/${pkgInfo.main}`).toString());
-        //         } else {
-        //             buffer.set(pkg, `module.exports = require("${pkg}");`);
-        //         }
-        //     }
-        // } else {
-        //     pkg = path.resolve(curPath, pkg + '.js');
-        //     pkg = normalizePath(pkg);
-        //     if (!pending.find(p => p == pkg) && !buffer.has(pkg)) {
-        //         pending.push(pkg);
-        //     }
-        // }
-        // return pkg;
-    };
-    const logFile = `${normalizePath(__dirname)}/compiled/services/src/utils/log.js`;
-    const consoleDef = `var console = __webpack_require__("${logFile}");`;
-
-    while (pending.length > 0) {
-        const file = pending.shift();
-        if (!fs.existsSync(file)) {
-            continue;
-        }
-
-        const curPath = getPath(file);
-        let compiled = fs.readFileSync(file).toString()
-            .replace(/\b__export\(require\("(.*?)"\)\);/g, (found, pkg) => {
-                pkg = parse(curPath, pkg);
-                return `__export(__webpack_require__("${pkg}"));`;
-            })
-            .replace(/(var \w+) = require\("(.*?)"\);/g, (found, varDef, pkg) => {
-                pkg = parse(curPath, pkg);
-                return `${varDef} = __webpack_require__("${pkg}");`;
-            });
-        if (compiled.indexOf(consoleDef) == -1 && isCreatingServices && logFile != file) {
-            // 给自动加上console的定义
-            compiled = `${consoleDef}\n${compiled}`;
-        }
-
-        buffer.set(file, compiled);
-    }
+        return result;
+    });
 
     console.log(`Creating bundle ${outFile} ...`);
-    let out = '', involved = [];
-    buffer.forEach((compiled, path) => {
-        out += `/***/ "${path}":\n`;
+    let out = '';
+    processed.forEach(module => {
+        out += `/***/ "${module.from}":\n`;
         out += '/***/ (function(module, exports, __webpack_require__) {\n';
-        out += compiled + '\n';
+        out += module.content + '\n';
         out += '/***/ }),\n\n';
-        involved.push(path);
     });
-    buffer.clear();
 
     out = `
 /******/ (function(modules) { // webpackBootstrap
@@ -321,76 +254,60 @@ ${out}
         // creating awadec / awadeu
         out = 'module.exports=\n' + out;
     }
+    mkdir(getPath(outFile));
     fs.writeFileSync(outFile, out);
 
     if (isCreatingServices) {
         reinit();
     }
-
-    return involved;
 }
 
-function createWebMainBundle(changedFiles: string[]): string[] {
-    if (!checkInvolved(changedFiles, involvedWebMainFiles)) {
-        return null;
-    }
-
+function createWebMainBundle(changedFiles: string[]): void {
     const entryFile = normalizePath(`${compiledRootPath}/web/src/main.js`);
-    const outFile = normalizePath(`${rootPath}/web/out/vmax-studio/awade/main.bundle.js`);
-
-    const pending: string[] = [entryFile];
-    const buffer = new Map<string, string>();
-    const parse = (curPath, pkg) => {
-        if (buffer.has(pkg)) {
-            return pkg;
-        }
-        const pkgJson = `${__dirname}/node_modules/${pkg}/package.json`;
-        if (fs.existsSync(pkgJson)) {
-            const pkgInfo = require(pkgJson);
-            if (!pkgInfo.module) {
-                throw new Error("Error: invalid required node_modules: " + pkg);
-            }
-            return `./node_modules/${pkg}/${pkgInfo.module}`;
-        }
-
-        pkg = path.resolve(curPath, pkg + '.js');
-        pkg = normalizePath(pkg);
-        if (buffer.has(pkg)) {
-            return pkg;
-        }
-
-        if (!pending.find(p => p == pkg)) {
-            pending.push(pkg);
-        }
-        return pkg;
-    };
-
-    while (pending.length > 0) {
-        const file = pending.shift();
-        if (!fs.existsSync(file)) {
-            continue;
-        }
-
-        const curPath = getPath(file);
-        let compiled = fs.readFileSync(file).toString()
-            .replace(/(var \w+) = require\("(.*?)"\);/g, (found, varDef, pkg) => {
-                pkg = parse(curPath, pkg);
-                return `${varDef} = __webpack_require__("${pkg}");`;
-            });
-
-        buffer.set(file, compiled);
+    const involved = traceInvolved(entryFile);
+    if (!checkInvolved(changedFiles, involved)) {
+        return;
     }
 
+    const processed = involved
+        .map(module => {
+            if (module.type != 'source') {
+                return undefined;
+            }
+            const content = fs.readFileSync(module.from).toString()
+                .replace(/\b__webpack_require__\("(.*)"\);/g, (found, pkg) => {
+                    if (involved.find(i => (i.type == 'std_node_modules' || i.type == 'non_std_node_modules') && i.from == pkg)) {
+                        const pkgJson = `${__dirname}/node_modules/${pkg}/package.json`;
+                        if (fs.existsSync(pkgJson)) {
+                            // std_node_modules
+                            const pkgInfo = require(pkgJson);
+                            if (!pkgInfo.module) {
+                                throw new Error("Error: invalid required node_modules: " + pkg);
+                            }
+                            const p = normalizePath(`./node_modules/${pkg}/${pkgInfo.module}`).substring(__dirname.length + 1);
+                            return `__webpack_require__("./${p}");`;
+                        } else {
+                            // non_std_node_modules
+                            const p = normalizePath(`./node_modules/${pkg}.js`).substring(__dirname.length + 1);
+                            return `__webpack_require__("./${p}");`;
+                        }
+                    } else {
+                        return found;
+                    }
+                });
+            return {content, from: module.from};
+        })
+        .filter(module => !!module);
+
+    const outFile = normalizePath(`${rootPath}/web/out/vmax-studio/awade/main.bundle.js`);
     console.log(`Creating bundle ${outFile} ...`);
-    let out = '', involved = [];
-    buffer.forEach((compiled, path) => {
-        out += `/***/ "${path}":\n`;
+    let out = '';
+    processed.forEach(module => {
+        out += `/***/ "${module.from}":\n`;
         out += '/***/ (function(module, exports, __webpack_require__) {\n';
-        out += compiled + '\n';
+        out += module.content + '\n';
         out += '/***/ }),\n\n';
-        involved.push(path);
     });
-    buffer.clear();
 
     out = `
 webpackJsonp(["main"],{
@@ -426,8 +343,8 @@ module.exports = __webpack_require__("${entryFile}");
 },[0]);
     `;
 
+    mkdir(getPath(outFile));
     fs.writeFileSync(outFile, out);
-    return involved;
 }
 
 function normalizePath(file: string): string {
@@ -460,6 +377,7 @@ function compileScript(file: string): string {
     logErrors(file);
     servicesHost.getCustomTransformers = () => ({before: [transformer(file)]});
     let output = services.getEmitOutput(file).outputFiles[0].text;
+    output = fixCompiled(output);
     mkdir(getPath(compiledPath));
     fs.writeFileSync(compiledPath, output);
     fs.writeFileSync(md5Path, curMD5);
@@ -468,12 +386,22 @@ function compileScript(file: string): string {
     return output;
 }
 
-function transformer<T extends ts.Node>(file: string): ts.TransformerFactory<T> {
+// transformer中对 export * from "abc" 这样的语句暂时不知道如何完美处理，这里补补漏
+function fixCompiled(rawCompiled: string): string {
+    const exportDef = `
+        function __export(m) {
+            for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
+        }
+    `;
+    return rawCompiled.replace('/* insert export function here */', exportDef);
+}
+
+function transformer<T extends ts.Node>(file: string): ts.TransformerFactory<any> {
     const curPath = getPath(file);
     const importedFiles = [];
     imports[toCompiledPath(file)] = importedFiles;
 
-    return (context) => {
+    return (context): any => {
         const visit: ts.Visitor = (node: ts.Node) => {
             if (ts.isImportDeclaration(node) && node.getChildCount() >= 4) {
                 let from = node.getChildAt(3).getText().replace(/(^['"]\s*)|(\s*['"]$)/g, '');
@@ -487,22 +415,39 @@ function transformer<T extends ts.Node>(file: string): ts.TransformerFactory<T> 
                     name = tmp[tmp.length - 1].replace(/\W/g, '_') + '_1';
                 }
 
-                const pkgJson = `${__dirname}/node_modules/${from}/package.json`;
-                const type = fs.existsSync(pkgJson) ? "node_modules" : "source";
+                let type;
+                if (fs.existsSync(`${__dirname}/node_modules/${from}/package.json`)) {
+                    type = "std_node_modules";
+                } else if (fs.existsSync(`${__dirname}/node_modules/${from}.js`)) {
+                    type = "non_std_node_modules";
+                } else if (builtInNodeModules.indexOf(from) != -1) {
+                    type = "node_built_in";
+                } else {
+                    type = 'source';
+                }
                 if (type == 'source') {
                     from = normalizePath(path.resolve(curPath, from + '.ts'));
                     from = toCompiledPath(from);
                 }
                 importedFiles.push({from, type});
 
-                const helper = type == "node_modules" ? '/*** from node_modules */' : '';
-                node = ts.createIdentifier(`${helper} var ${name} = __webpack_require__("${from}");`);
+                node = ts.createIdentifier(`var ${name} = __webpack_require__("${from}");`);
             } else if (ts.isExportDeclaration(node)) {
                 let from = node.getChildAt(3).getText().replace(/(^['"]\s*)|(\s*['"]$)/g, '');
                 from = normalizePath(path.resolve(curPath, from + '.ts'));
                 from = toCompiledPath(from);
                 importedFiles.push({from, type: "source"});
-                node = ts.createIdentifier(`__export(__webpack_require__("${from}"));`);
+
+                // @todo 以下语句在ts v3.3 才能工作，当前版本是2.4
+                // node = ts.createExportDeclaration(
+                //     undefined,
+                //     undefined,
+                //     undefined,
+                //     ts.createLiteral(from)
+                // );
+                // 先用龌龊的方式解决这个问题吧
+                // 注意 /* insert export function here */ 这里个标志到时候会有多处，但是只替换一次就好
+                node = ts.createIdentifier(`/* insert export function here */\n__export(__webpack_require__("${from}"));`);
             }
             return ts.visitEachChild(node, (child) => visit(child), context);
         };
@@ -564,11 +509,28 @@ function toSourcePath(source: string): string {
         source;
 }
 
-function checkInvolved(changed: string[], involved: string[]): boolean {
-    return involved.length == 0 || changed.filter(ch => involved.indexOf(ch) != -1).length > 0;
+function traceInvolved(entry: string): ImportedFile[] {
+    const involved: ImportedFile[] = [{from: entry, type: "source"}];
+    // 这个for不能改成forEach之类的，involved在循环过程中会变长
+    for (let i = 0; i < involved.length; i++) {
+        const imported = involved[i];
+        if (imported.type == 'source') {
+            if (!imports[imported.from]) {
+                console.log('>>', imported.from)
+                continue;
+            }
+            const incoming = imports[imported.from].filter(f => !involved.find(i => i.from == f.from));
+            involved.push(...incoming);
+        }
+    }
+    return involved;
 }
 
-function initImports(): ImportBuffer {
+function checkInvolved(changed: string[], involved: ImportedFile[]): boolean {
+    return changed.filter(ch => involved.find(i => i.from == ch)).length > 0;
+}
+
+function initImports(): ImportedFileMap {
     const importsPath = './compiled/imports.json';
     return fs.existsSync(importsPath) ? JSON.parse(fs.readFileSync(importsPath).toString()) : {};
 }

@@ -1,7 +1,6 @@
 import {Component as CMP} from '@angular/core';
-import {basic} from "../../../basics/src/basic";
 
-const data = require("./data.json");
+// const data = require("./data.json");
 const Component = {};
 
 @CMP({
@@ -11,8 +10,7 @@ const Component = {};
 })
 export class AppComponent {
     constructor() {
-        console.log('33333333333');
-        basic('xxx');
+        console.log('333ff33333333');
 
     }
     nextPinyin() {

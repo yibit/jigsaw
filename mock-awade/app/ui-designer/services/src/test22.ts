@@ -12,8 +12,8 @@ const n1 = calc(40,30,20,10);
 const n2 = complexCalc(4,3,2,1);
 console.log(add(n1, n2));
 
-export const aa = 'bbcccc';
-console.log(aa);
-console.log(aa);
-console.log(aa);
-console.log(aa);
+export const bb = 'ffffffffffffffffffff';
+console.log(bb);
+console.log(bb);
+console.log(bb);
+console.log(bb);
