@@ -5,12 +5,18 @@ import * as path from "path";
 import * as MD5 from "md5.js";
 import * as http from "http";
 import {sync as mkdir} from "mkdirp";
+import {getIdentifierAliases} from "../../plugins/installer/vendor-alias-parser";
 
-type ImportedFile = { from: string, type: "source" | "std_node_modules" | "non_std_node_modules" | "node_built_in" };
+type ImportFromType = "source" | "std_node_modules" | "non_std_node_modules" | "node_built_in";
+type ImportedFile = { from: string, identifiers: string[], type: ImportFromType };
 type ImportedFileMap = { [path: string]: ImportedFile[] };
+type CtorParam = { name: string, type: string, from: string };
+type ClassCtorParams = { [className: string]: CtorParam[] };
+type CtorParamsMap = { [path: string]: ClassCtorParams[] };
 type ChangeEvent = 'add' | 'change' | 'unlink' | 'ref';
 type Change = { compiled?: string, path: string, event: ChangeEvent };
 
+const identifierAliases = getIdentifierAliases();
 const builtInNodeModules = [
     'assert', 'async_hooks', 'child_process', 'cluster', 'console', 'crypto', 'dns', 'domain', 'events', 'fs',
     'http', 'http2', 'https', 'inspector', 'net', 'os', 'path', 'perf_hooks', 'punycode', 'querystring', 'readline',
@@ -59,7 +65,7 @@ watcher
 let timerHandler = null;
 const changes: Change[] = [];
 const imports: ImportedFileMap = initImports();
-
+const ctorParamMap: CtorParamsMap = {};
 
 function cacheChange(path: string, event: 'add' | 'change' | 'unlink'): void {
     let sign;
@@ -269,28 +275,32 @@ function createWebMainBundle(changedFiles: string[]): void {
         return;
     }
 
+    function transformPackagePath(pkg: string): string {
+        const pkgJson = `${__dirname}/node_modules/${pkg}/package.json`;
+        let transformed;
+        if (fs.existsSync(pkgJson)) {
+            // std_node_modules
+            const pkgInfo = require(pkgJson);
+            if (!pkgInfo.module) {
+                throw new Error("Error: invalid required node_modules: " + pkg);
+            }
+            transformed = normalizePath(`./node_modules/${pkg}/${pkgInfo.module}`).substring(__dirname.length + 1);
+        } else {
+            // non_std_node_modules
+            transformed = normalizePath(`./node_modules/${pkg}.js`).substring(__dirname.length + 1);
+        }
+        return './' + transformed;
+    }
+
     const processed = involved
         .map(module => {
             if (module.type != 'source') {
                 return undefined;
             }
             const content = fs.readFileSync(module.from).toString()
-                .replace(/\b__webpack_require__\("(.*)"\);/g, (found, pkg) => {
+                .replace(/\brequire\("(.*)"\);/g, (found, pkg) => {
                     if (involved.find(i => (i.type == 'std_node_modules' || i.type == 'non_std_node_modules') && i.from == pkg)) {
-                        const pkgJson = `${__dirname}/node_modules/${pkg}/package.json`;
-                        if (fs.existsSync(pkgJson)) {
-                            // std_node_modules
-                            const pkgInfo = require(pkgJson);
-                            if (!pkgInfo.module) {
-                                throw new Error("Error: invalid required node_modules: " + pkg);
-                            }
-                            const p = normalizePath(`./node_modules/${pkg}/${pkgInfo.module}`).substring(__dirname.length + 1);
-                            return `__webpack_require__("./${p}");`;
-                        } else {
-                            // non_std_node_modules
-                            const p = normalizePath(`./node_modules/${pkg}.js`).substring(__dirname.length + 1);
-                            return `__webpack_require__("./${p}");`;
-                        }
+                        return `require("${transformPackagePath(pkg)}");`;
                     } else {
                         return found;
                     }
@@ -299,12 +309,30 @@ function createWebMainBundle(changedFiles: string[]): void {
         })
         .filter(module => !!module);
 
+    // 处理别名的问题
+    let aliasRollBack = 'let _tmpModule;\n';
+    involved.filter(i => i.type == 'std_node_modules' || i.type == 'non_std_node_modules').forEach(importInfo => {
+        const pkg = transformPackagePath(importInfo.from);
+        const aliases = identifierAliases[pkg];
+        if (!aliases) {
+            console.warn('no alias info found:', pkg);
+            return;
+        }
+        aliasRollBack += `_tmpModule = require("${pkg}");\n`;
+        aliases.forEach(a => {
+            if (a.identifier.match(/^\w+$/)) {
+                aliasRollBack += `_tmpModule.${a.identifier} = _tmpModule.${a.alias};\n`;
+            }
+        });
+        aliasRollBack += '\n';
+    });
+
     const outFile = normalizePath(`${rootPath}/web/out/vmax-studio/awade/main.bundle.js`);
     console.log(`Creating bundle ${outFile} ...`);
     let out = '';
     processed.forEach(module => {
         out += `/***/ "${module.from}":\n`;
-        out += '/***/ (function(module, exports, __webpack_require__) {\n';
+        out += '/***/ (function(module, exports, require) {\n';
         out += module.content + '\n';
         out += '/***/ }),\n\n';
     });
@@ -333,9 +361,10 @@ ${out}
 
 
 /***/ 0:
-/***/ (function(module, exports, __webpack_require__) {
+/***/ (function(module, exports, require) {
 
-module.exports = __webpack_require__("${entryFile}");
+${aliasRollBack}
+module.exports = require("${entryFile}");
 
 
 /***/ })
@@ -383,6 +412,8 @@ function compileScript(file: string): string {
     fs.writeFileSync(md5Path, curMD5);
     console.log('Compiled!');
 
+    console.log(JSON.stringify(ctorParamMap, null, '  '));
+
     return output;
 }
 
@@ -396,26 +427,30 @@ function fixCompiled(rawCompiled: string): string {
     return rawCompiled.replace('/* insert export function here */', exportDef);
 }
 
+// 调试这个东西，一定要配合这个网站 https://ts-ast-viewer.com/
 function transformer<T extends ts.Node>(file: string): ts.TransformerFactory<any> {
-    const curPath = getPath(file);
-    const importedFiles = [];
-    imports[toCompiledPath(file)] = importedFiles;
+    const curPath = getPath(file), compiledPath = toCompiledPath(file);
+    const importedFiles: ImportedFile[] = [];
+    imports[compiledPath] = importedFiles;
+    const classes: ClassCtorParams[] = [];
+    ctorParamMap[compiledPath] = classes;
+
 
     return (context): any => {
         const visit: ts.Visitor = (node: ts.Node) => {
+            // 有的非标准的import语法：import "xxxx"; 要过滤掉
             if (ts.isImportDeclaration(node) && node.getChildCount() >= 4) {
-                let from = node.getChildAt(3).getText().replace(/(^['"]\s*)|(\s*['"]$)/g, '');
-                const tmp = from.split(/\//);
-
-                let name, child = node.getChildAt(1).getChildAt(0);
-                if (child.kind == ts.SyntaxKind.NamespaceImport) {
-                    name = child.getChildAt(2).getText();
+                const clauseNode = node.getChildAt(1).getChildAt(0);
+                let identifiers: string[];
+                if (clauseNode.kind == ts.SyntaxKind.NamedImports) {
+                    // import {ClassA, ClassB} from "fdfdfd"; 的方式
+                    identifiers = clauseNode.getChildAt(1).getText().split(/\s*,\s*/);
                 } else {
-                    // @todo 这里存在重名的风险，如果有人故意起一个类似 var aa_1 这样的名字就会重名
-                    name = tmp[tmp.length - 1].replace(/\W/g, '_') + '_1';
+                    // import * as ts from "fdfdf"; 的方式
+                    identifiers = [clauseNode.getChildAt(2).getText()];
                 }
 
-                let type;
+                let type, from = node.getChildAt(3).getText().replace(/(^['"]\s*)|(\s*['"]$)/g, '');
                 if (fs.existsSync(`${__dirname}/node_modules/${from}/package.json`)) {
                     type = "std_node_modules";
                 } else if (fs.existsSync(`${__dirname}/node_modules/${from}.js`)) {
@@ -429,31 +464,107 @@ function transformer<T extends ts.Node>(file: string): ts.TransformerFactory<any
                     from = normalizePath(path.resolve(curPath, from + '.ts'));
                     from = toCompiledPath(from);
                 }
-                importedFiles.push({from, type});
-
-                node = ts.createIdentifier(`var ${name} = __webpack_require__("${from}");`);
+                importedFiles.push({from, type, identifiers});
+                node = ts.updateImportDeclaration(node, undefined, undefined,
+                    ts.createImportClause(
+                        undefined,
+                        ts.createNamedImports(
+                            [ts.createImportSpecifier(undefined, undefined)])
+                    ),
+                    // 目的是为了更新这个
+                    ts.createLiteral(from));
             } else if (ts.isExportDeclaration(node)) {
                 let from = node.getChildAt(3).getText().replace(/(^['"]\s*)|(\s*['"]$)/g, '');
                 from = normalizePath(path.resolve(curPath, from + '.ts'));
                 from = toCompiledPath(from);
-                importedFiles.push({from, type: "source"});
+                importedFiles.push({from, type: "source", identifiers: []});
 
-                // @todo 以下语句在ts v3.3 才能工作，当前版本是2.4
-                // node = ts.createExportDeclaration(
-                //     undefined,
-                //     undefined,
-                //     undefined,
-                //     ts.createLiteral(from)
-                // );
-                // 先用龌龊的方式解决这个问题吧
+                // @todo 下面这个写法要的ts的更新版本才能生效
+                // node = ts.updateExportDeclaration(node, undefined, undefined, undefined, ts.createLiteral(from));
+
+                // 这里return新的node后，语法树解析就有问题了，所以，只打上标记，再做二次处理
                 // 注意 /* insert export function here */ 这里个标志到时候会有多处，但是只替换一次就好
-                node = ts.createIdentifier(`/* insert export function here */\n__export(__webpack_require__("${from}"));`);
+                node = ts.createIdentifier(`/* insert export function here */\n__export(require("${from}"));`);
+            }
+
+            // 构造函数相关
+            else if (ts.isClassDeclaration(node)) {
+                let ch = findChildByType(node, ts.SyntaxKind.Identifier);
+                let currClass: ClassCtorParams, curParams: CtorParam[];
+                curParams = [];
+                currClass = {};
+                currClass[ch.getText()] = curParams;
+                classes.push(currClass);
+
+                ch = findChildByType(node, ts.SyntaxKind.SyntaxList, node.getChildren().indexOf(ch));
+                const ctorNode = findChildByType(ch, ts.SyntaxKind.Constructor);
+                const paramList = ctorNode.getChildAt(2);
+                paramList.getChildren().filter(p => p.kind == ts.SyntaxKind.Parameter).forEach(paramNode => {
+                    // 最开始可能有public等修饰符，不理他
+                    const name = findChildByType(paramNode, ts.SyntaxKind.Identifier).getText().trim();
+                    const type = findChildByType(paramNode, ts.SyntaxKind.TypeReference).getText().trim();
+                    const from = importedFiles.find(imf => imf.identifiers.indexOf(type) != -1).from;
+                    curParams.push({name, from, type});
+                });
+            }
+
+            else if (ts.isCallExpression(node) && node.parent && ts.isDecorator(node.parent)) {
+                const propertiesNode = node.getChildAt(2).getChildAt(0).getChildAt(1);
+                const properties = propertiesNode.getChildren()
+                    .filter(c => c.kind == ts.SyntaxKind.PropertyAssignment)
+                    .map((propNode: ts.PropertyAssignment) => {
+                        const prop = propNode.getChildAt(0).getText();
+                        if (prop == 'templateUrl') {
+                            return ts.createPropertyAssignment(
+                                ts.createIdentifier('template'),
+                                ts.createCall(ts.createIdentifier('require'), undefined, [
+                                    ts.createLiteral(stringLiteral2CompiledPath(propNode.getChildAt(2).getText()))
+                                ])
+                            )
+                        } else if (prop == 'styleUrls') {
+                            const arrLiterVal = propNode.getChildAt(2).getChildAt(1).getChildren()
+                                .filter(c => c.kind == ts.SyntaxKind.StringLiteral)
+                                .map(strLiter => stringLiteral2CompiledPath(strLiter.getText()))
+                                .map(str => ts.createCall(ts.createIdentifier('require'),
+                                    undefined, [ts.createLiteral(str)]));
+                            return ts.createPropertyAssignment(
+                                ts.createIdentifier('styles'),
+                                ts.createArrayLiteral(arrLiterVal, false)
+                            )
+                        } else {
+                            return ts.createPropertyAssignment(
+                                ts.createIdentifier(prop),
+                                propNode.initializer
+                            )
+                        }
+                    });
+                node = ts.updateCall(node, node.expression, undefined, [
+                    ts.createObjectLiteral(properties, false),
+                    ts.createCall(ts.createIdentifier('__metadata'), undefined, [
+                        ts.createLiteral("design:paramtypes"),
+                        ts.createArrayLiteral([], false)
+                    ])
+                ]);
             }
             return ts.visitEachChild(node, (child) => visit(child), context);
         };
 
         return (node) => ts.visitNode(node, visit);
     };
+
+    function findChildByType(node: ts.Node, type: ts.SyntaxKind, fromIdx: number = 0): ts.Node {
+        while (true) {
+            const ch = node.getChildAt(fromIdx++);
+            if (!ch || ch.kind == type) {
+                return ch;
+            }
+        }
+    }
+
+    function stringLiteral2CompiledPath(value: string): string {
+        value = value.replace(/(^['"]\s*)|(\s*['"]$)/g, '');
+        return toCompiledPath(normalizePath(path.resolve(curPath, value)));
+    }
 }
 
 function logErrors(fileName: string): void {
@@ -510,13 +621,12 @@ function toSourcePath(source: string): string {
 }
 
 function traceInvolved(entry: string): ImportedFile[] {
-    const involved: ImportedFile[] = [{from: entry, type: "source"}];
+    const involved: ImportedFile[] = [{from: entry, type: "source", identifiers: null}];
     // 这个for不能改成forEach之类的，involved在循环过程中会变长
     for (let i = 0; i < involved.length; i++) {
         const imported = involved[i];
         if (imported.type == 'source') {
             if (!imports[imported.from]) {
-                console.log('>>', imported.from)
                 continue;
             }
             const incoming = imports[imported.from].filter(f => !involved.find(i => i.from == f.from));
