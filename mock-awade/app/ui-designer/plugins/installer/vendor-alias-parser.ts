@@ -1,4 +1,4 @@
-import {existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync} from "fs";
+import {existsSync, readFileSync, writeFileSync} from "fs";
 import {sync as glob} from "glob";
 import * as ts from "typescript";
 import * as path from 'path';
