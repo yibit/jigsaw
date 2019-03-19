@@ -37,7 +37,7 @@ function readAliasFromVendor() {
     });
 }
 
-function getVendorIdentifierAliases<T extends ts.Node>(): ts.TransformerFactory<T> {
+function getVendorIdentifierAliases<T extends ts.Node>(): ts.TransformerFactory<any> {
     return (context) => {
         const visit: ts.Visitor = (node) => {
             if(node.kind == ts.SyntaxKind.SourceFile) {
