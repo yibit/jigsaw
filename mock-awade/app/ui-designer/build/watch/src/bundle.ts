@@ -6,10 +6,10 @@ import {
     compiledRoot,
     expandPackagePath,
     getPath,
-    identifierAliases, imports,
+    identifierAliases,
+    imports,
     nodeModulesRoot,
-    normalizePath,
-    reinit, toCompiledPath,
+    reinit,
 } from "./shared";
 import {ImportedFile} from "./typings";
 
@@ -26,8 +26,8 @@ export function createServerBundle(changedFiles: string[], entryFile: string, ou
     // 编译好的块需要根据当前输出目标做一些具体化的处理
     const processed = involved.map(module => {
         const result = {content: '', from: module.from};
-        if (module.type == "std_node_modules") {
-            const pkgJson = `${nodeModulesRoot}/${module.from}/package.json`;
+        const pkgJson = `${nodeModulesRoot}/${module.from}/package.json`;
+        if (module.type == "std_node_modules" && fs.existsSync(pkgJson)) {
             if (isCreatingServices) {
                 const pkgInfo = require(pkgJson);
                 if (!pkgInfo.main) {
@@ -237,6 +237,7 @@ ${out}`;
             /***/ })
             });
         `;
+        addBundle2Index(outFile);
     }
 
     mkdir(getPath(outFile));
@@ -244,87 +245,18 @@ ${out}`;
     console.log(`Created!`);
 }
 
-// export function createWebLibBundle(changedFiles: string[], bundleName: string, entryFile: string, outFile: string): void {
-//     const involved = traceInvolved(entryFile);
-//     if (!checkInvolved(changedFiles, involved)) {
-//         return;
-//     }
-//
-//     type ProcessedContent = { content: string, from: string };
-//     const processedScripts: ProcessedContent[] = involved
-//         .filter(module => module.type == 'source')
-//         .map(module => {
-//             const content = fs.readFileSync(module.from).toString()
-//                 .replace(/\brequire\("(.*)"\);/g, (found, pkg) => {
-//                     if (involved.find(i => (i.type == 'std_node_modules' || i.type == 'non_std_node_modules') && i.from == pkg)) {
-//                         return `require("${expandPackagePath(pkg)}");`;
-//                     } else {
-//                         return found;
-//                     }
-//                 });
-//             return {content, from: module.from};
-//         });
-//     const processedResources: ProcessedContent[] = involved
-//         .filter(module => module.type == "resource")
-//         .map(module => ({
-//             content: fs.readFileSync(module.from).toString().replace(/\r?\n/g, "\\n").replace(/"/g, '\\"'),
-//             from: module.from
-//         }));
-//
-//     console.log(`Creating bundle ${outFile} ...`);
-//     let out = '';
-//     processedScripts.forEach(module => {
-//         out += `/***/ "${module.from}":\n`;
-//         out += '/***/ (function(module, exports, require) {\n';
-//         out += module.content + '\n';
-//         out += '/***/ }),\n\n';
-//     });
-//     processedResources.forEach(module => {
-//         out += `/***/ "${module.from}":\n`;
-//         out += '/***/ (function(module, exports) {\n';
-//         out += `module.exports = "${module.content}";\n`;
-//         out += '/***/ }),\n\n';
-//     });
-//
-//     out = `
-// webpackJsonp(["${bundleName}"],{
-//
-// /***/ "./src/$$_lazy_route_resource lazy recursive":
-// /***/ (function(module, exports) {
-//
-// function webpackEmptyAsyncContext(req) {
-//     // Here Promise.resolve().then() is used instead of new Promise() to prevent
-//     // uncatched exception popping up in devtools
-//     return Promise.resolve().then(function() {
-//         throw new Error("Cannot find module '" + req + "'.");
-//     });
-// }
-// webpackEmptyAsyncContext.keys = function() { return []; };
-// webpackEmptyAsyncContext.resolve = webpackEmptyAsyncContext;
-// module.exports = webpackEmptyAsyncContext;
-// webpackEmptyAsyncContext.id = "./src/$$_lazy_route_resource lazy recursive";
-//
-// /***/ }),
-//
-// /***/ "${bundleName}":
-// /***/ (function(module, exports, require) {
-// "use strict";
-// function __export(m) {
-//     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-// }
-// Object.defineProperty(exports, "__esModule", { value: true });
-// __export(require("${entryFile}"));
-// /***/ }),
-//
-// ${out}
-//
-// });
-//     `;
-//
-//     mkdir(getPath(outFile));
-//     fs.writeFileSync(outFile, out);
-//     console.log(`Created!`);
-// }
+function addBundle2Index(outFile: string): void {
+    const fileName = outFile.match(/.*\/(.*?\.js)/i)[1];
+    const indexFile = `${awadeRoot}/web/out/vmax-studio/awade/index.html`;
+    let indexContent = fs.readFileSync(indexFile).toString();
+    if (indexContent.match(new RegExp(`<script .*?"${fileName}"></script>`))) {
+        return;
+    }
+    const mainBundleTag = '<script type="text/javascript" src="main.bundle.js"></script>';
+    indexContent = indexContent.replace(mainBundleTag,
+        `<script type="text/javascript" src="${fileName}"></script>${mainBundleTag}`);
+    fs.writeFileSync(indexFile, indexContent);
+}
 
 function generateAliasRollbackCode(): string {
     const mainBundleInvolved = traceInvolved(`${compiledRoot}/web/src/main.js`);

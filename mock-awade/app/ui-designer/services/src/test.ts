@@ -1,10 +1,9 @@
 import * as marked from "marked";
-// import {Component} from "@angular/core";
 import {calc} from "./lib/calc";
 import {complexCalc} from "./lib/complex-calc";
 import {add as add1} from "./lib/add";
 import {log} from "./utils/log";
-import {basic} from "../../basics/src/basic";
+import {basic} from "@awade/basics";
 
 // var data = require('./xx.json');
 

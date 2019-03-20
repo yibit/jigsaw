@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as ts from "typescript";
 import * as http from "http";
 import {getIdentifierAliases} from "../../../plugins/installer/vendor-alias-parser";
-import {Change, ImportedFile, ImportedFileMap} from "./typings";
+import {Change, ImportedFile, ImportedFileMap, ImportFromType} from "./typings";
 
 export const builtInNodeModules = [
     'assert', 'async_hooks', 'child_process', 'cluster', 'console', 'crypto', 'dns', 'domain', 'events', 'fs',
@@ -77,21 +77,39 @@ export function saveImports(): void {
     fs.writeFileSync(importsPath, JSON.stringify(imports));
 }
 
-export function expandPackagePath(pkg: string): string {
-    const pkgJson = `${nodeModulesRoot}/${pkg}/package.json`;
-    let transformed;
-    if (fs.existsSync(pkgJson)) {
-        // std_node_modules
+export function expandPackagePath(pkgPath: string): string {
+    if (pkgPath.startsWith('@awade/')) {
+        // 内置模块
+        return pkgPath;
+    }
+
+    const pkgJson = `${nodeModulesRoot}/${pkgPath}/package.json`;
+    let transformed, type = predictImportType(pkgPath);
+    if (type == "std_node_modules" && fs.existsSync(pkgJson)) {
         const pkgInfo = require(pkgJson);
         if (!pkgInfo.module) {
-            throw new Error("Error: invalid required node_modules: " + pkg);
+            throw new Error("Error: invalid required node_modules: " + pkgPath);
         }
-        transformed = normalizePath(`${nodeModulesRoot}/${pkg}/${pkgInfo.module}`)
+        transformed = normalizePath(`${nodeModulesRoot}/${pkgPath}/${pkgInfo.module}`)
             .substring(nodeModulesRoot.length + 1);
     } else {
         // non_std_node_modules
-        transformed = normalizePath(`${nodeModulesRoot}/${pkg}.js`)
+        transformed = normalizePath(`${nodeModulesRoot}/${pkgPath}.js`)
             .substring(nodeModulesRoot.length + 1);
     }
     return './node_modules/' + transformed;
+}
+
+export function predictImportType(from: string): ImportFromType {
+    let type: ImportFromType;
+    if (from.match(/\.?\.\//)) {
+        type = 'source';
+    } else if (builtInNodeModules.indexOf(from) != -1) {
+        type = "node_built_in";
+    } else if (fs.existsSync(`${nodeModulesRoot}/${from}.js`)) {
+        type = "non_std_node_modules";
+    } else {
+        type = "std_node_modules";
+    }
+    return type;
 }

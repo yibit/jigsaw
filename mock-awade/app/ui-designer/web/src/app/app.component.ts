@@ -1,5 +1,5 @@
 import {Component} from '@angular/core';
-// import {basic} from "@awade/basics";
+import {basic} from "@awade/basics";
 
 // const data = require("./data.json");
 
@@ -11,7 +11,7 @@ import {Component} from '@angular/core';
 export class AppComponent {
     constructor() {
         console.log('333ffff33ffffffffffffffffffffffff3fj33333');
-        // basic('xxxxxxxxxxxxxxxxxxxxxxxxx')
+        basic('xxxxxxxxxxxxxxxxxxxxfffxxxxx')
     }
     nextPinyin() {
         const pinyins = this.selectedInitials.concat(...this.selectedVowels).concat(...this.selectedWholeTone);

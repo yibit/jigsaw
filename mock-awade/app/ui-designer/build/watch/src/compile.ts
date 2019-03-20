@@ -10,7 +10,7 @@ import {
     getScriptSnapshot,
     imports, nodeModulesRoot, normalizePath,
     awadeRoot,
-    toCompiledPath, expandPackagePath
+    toCompiledPath, expandPackagePath, predictImportType
 } from "./shared";
 import {InjectedParam, ImportedFile, ImportFromType} from "./typings";
 
@@ -154,20 +154,10 @@ function transformer<T extends ts.Node>(file: string): ts.TransformerFactory<any
             // import * as ts from "fdfdf"; 的方式
             identifiers = [clauseNode.getChildAt(2).getText()];
         }
-        let type: ImportFromType;
         let from = node.getChildAt(3).getText().replace(/(^['"]\s*)|(\s*['"]$)/g, '');
-        if (fs.existsSync(`${nodeModulesRoot}/${from}/package.json`)) {
-            type = "std_node_modules";
-        } else if (fs.existsSync(`${nodeModulesRoot}/${from}.js`)) {
-            type = "non_std_node_modules";
-        } else if (builtInNodeModules.indexOf(from) != -1) {
-            type = "node_built_in";
-        } else {
-            type = 'source';
-        }
+        let type: ImportFromType = predictImportType(from);
         if (type == 'source') {
-            from = normalizePath(path.resolve(curPath, from + '.ts'));
-            from = toCompiledPath(from);
+            from = toCompiledPath(normalizePath(path.resolve(curPath, from + '.ts')));
         }
         curImports.push({from, type, identifiers});
         return ts.updateImportDeclaration(
@@ -182,8 +172,7 @@ function transformer<T extends ts.Node>(file: string): ts.TransformerFactory<any
         }
 
         let from = node.getChildAt(3).getText().replace(/(^['"]\s*)|(\s*['"]$)/g, '');
-        from = normalizePath(path.resolve(curPath, from + '.ts'));
-        from = toCompiledPath(from);
+        from = toCompiledPath(normalizePath(path.resolve(curPath, from + '.ts')));
         curImports.push({from, type: "source", identifiers: []});
         return ts.createIdentifier(`/* insert export function here */\n__export(require("${from}"));`);
     }
@@ -251,9 +240,17 @@ function transformer<T extends ts.Node>(file: string): ts.TransformerFactory<any
 
         // 下面这段代码用于给当前类添加一个新的渲染器 __metadata 这是angular编译器要用的
         const injectedParams = parseInjectedParams(node).map(param => {
+            const type = predictImportType(param.from);
+            let requirePath;
+            if (type == 'source') {
+                requirePath = toCompiledPath(normalizePath(path.resolve(curPath, param.from + '.ts')));
+            } else {
+                // std non std node module
+                requirePath = expandPackagePath(param.from);
+            }
             return ts.createPropertyAccess(
                 ts.createCall(ts.createIdentifier('require'), undefined,
-                    [ts.createLiteral(expandPackagePath(param.from))]),
+                    [ts.createLiteral(requirePath)]),
                 ts.createIdentifier(param.type)
             )
         });
@@ -280,6 +277,11 @@ function transformer<T extends ts.Node>(file: string): ts.TransformerFactory<any
         let injectedParams: InjectedParam[] = [];
         node = findChildByType(classNode, ts.SyntaxKind.SyntaxList, classNode.getChildren().indexOf(node));
         const ctorNode = findChildByType(node, ts.SyntaxKind.Constructor);
+        if (!ctorNode) {
+            // 没有定义构造函数
+            return injectedParams;
+        }
+
         const paramList = ctorNode.getChildAt(2);
         paramList.getChildren().filter(p => p.kind == ts.SyntaxKind.Parameter).forEach(paramNode => {
             // 最开始可能有public等修饰符，不理他

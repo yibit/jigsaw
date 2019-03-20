@@ -24,5 +24,9 @@
     "bugs": {
         "url": "https://gitlab.zte.com.cn/10045812/ng-eval/issues"
     },
-    "homepage": "http://rdk.zte.com.cn/vmax-studio/awade"
+    "homepage": "http://rdk.zte.com.cn/vmax-studio/awade",
+    "dependencies": {
+        "gulp": "^4.0.0",
+        "ts-node": "^8.0.3"
+    }
 }
