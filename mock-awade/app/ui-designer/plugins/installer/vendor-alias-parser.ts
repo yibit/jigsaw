@@ -4,23 +4,25 @@ import * as ts from "typescript";
 import * as path from 'path';
 
 export type AliasMap = { [pkg: string]: {identifier: string, alias: string }[] };
-let identifierAliases: AliasMap = {};
-const webPath = path.join(__dirname, '../../web/out/vmax-studio/awade/');
 
-if (existsSync(path.join(webPath, 'identifierAliasesFromVendor.json'))) {
-    identifierAliases = require(path.join(webPath, 'identifierAliasesFromVendor.json'));
-} else {
-    console.log('generate alias from vendor...');
-    readAliasFromVendor();
-    writeFileSync(path.join(webPath, 'identifierAliasesFromVendor.json'),
-        JSON.stringify(identifierAliases, null, '  '));
-}
+export function getIdentifierAliases(webPath?: string): AliasMap {
+    let identifierAliases: AliasMap = {};
+    if (!webPath) {
+        webPath = path.join(__dirname, '../../web/out/vmax-studio/awade/');
+    }
 
-export function getIdentifierAliases() {
+    if (existsSync(path.join(webPath, 'identifierAliasesFromVendor.json'))) {
+        identifierAliases = require(path.join(webPath, 'identifierAliasesFromVendor.json'));
+    } else {
+        console.log('generate alias from vendor...');
+        readAliasFromVendor(webPath, identifierAliases);
+        writeFileSync(path.join(webPath, 'identifierAliasesFromVendor.json'),
+            JSON.stringify(identifierAliases, null, '  '));
+    }
     return identifierAliases;
 }
 
-function readAliasFromVendor() {
+function readAliasFromVendor(webPath: string, identifierAliases: AliasMap) {
     let codeVendor = '';
     glob('vendor*.bundle.js', {cwd: webPath}).forEach(filePath => {
         codeVendor = readFileSync(path.join(webPath, filePath)).toString();
@@ -33,11 +35,11 @@ function readAliasFromVendor() {
 
     ts.transpileModule(codeVendor, {
         compilerOptions: {module: ts.ModuleKind.ES2015},
-        transformers: {before: [getVendorIdentifierAliases()]}
+        transformers: {before: [getVendorIdentifierAliases(identifierAliases)]}
     });
 }
 
-function getVendorIdentifierAliases<T extends ts.Node>(): ts.TransformerFactory<any> {
+function getVendorIdentifierAliases<T extends ts.Node>(identifierAliases: AliasMap): ts.TransformerFactory<any> {
     return (context) => {
         const visit: ts.Visitor = (node) => {
             if(node.kind == ts.SyntaxKind.SourceFile) {

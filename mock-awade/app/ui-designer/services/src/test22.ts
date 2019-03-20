@@ -5,7 +5,7 @@ import {complexCalc} from "./lib/complex-calc";
 import {add} from "./lib/add";
 import {add as add1} from "./lib/add";
 
-const md = marked(`[3333333333333333](bbbbbbbbbbbbbbbb)`);
+const md = marked(`[ffff](bbbbbbbbbbbbbbbb)`);
 console.log(md);
 
 const n1 = calc(40,30,20,10);

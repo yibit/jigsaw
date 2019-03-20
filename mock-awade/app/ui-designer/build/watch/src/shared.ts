@@ -12,10 +12,11 @@ export const builtInNodeModules = [
     'worker_threads', 'zlib'
 ];
 
-export const identifierAliases = getIdentifierAliases();
-export const compiledRoot = normalizePath(`${__dirname}/../compiled`);
-export const awadeRoot = normalizePath(`${__dirname}/../../..`);
-export const nodeModulesRoot = normalizePath(`${__dirname}/../node_modules`);
+// 运行时 `__dirname` 的值是是 app/ui-designer/build/watch/dist/build/watch/src
+export const awadeRoot = normalizePath(`${__dirname}/../../../../../..`);
+export const compiledRoot = normalizePath(`${awadeRoot}/build/watch/compiled`);
+export const nodeModulesRoot = normalizePath(`${awadeRoot}/web/node_modules`);
+export const identifierAliases = getIdentifierAliases(`${awadeRoot}/web/out/vmax-studio/awade/`);
 
 export const changes: Change[] = [];
 export const imports: ImportedFileMap = initImports();
@@ -29,18 +30,6 @@ export function getPath(file: string): string {
     tmp.pop();
     return tmp.join('/');
 }
-
-// transformer中对 export * from "abc" 这样的语句暂时不知道如何完美处理，这里补补漏
-export function fixCompiled(rawCompiled: string): string {
-    const exportDef = `
-        function __export(m) {
-            for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
-        }
-    `;
-    return rawCompiled.replace('/* insert export function here */', exportDef);
-}
-
-
 
 export function getScriptSnapshot(file: string): ts.IScriptSnapshot {
     if (!fs.existsSync(file)) {
@@ -64,31 +53,15 @@ export function reinit(): void {
 
 export function toCompiledPath(source: string): string {
     return !source.startsWith(normalizePath(`${compiledRoot}/`)) ?
-        source.replace(awadeRoot, compiledRoot).replace(/\.ts$/, '.js') :
+        source.replace(awadeRoot, compiledRoot).replace(/\.ts$/, '.js').replace(/\.scss$/, '.css') :
         source;
 }
 
-export function toSourcePath(source: string): string {
-    return source.startsWith(normalizePath(`${compiledRoot}/`)) ?
-        source.replace(compiledRoot, awadeRoot).replace(/\.js$/, '.ts') :
-        source;
-}
-
-export function traceInvolved(entry: string): ImportedFile[] {
-    const involved: ImportedFile[] = [{from: entry, type: "source", identifiers: null}];
-    // 这个for不能改成forEach之类的，involved在循环过程中会变长
-    for (let i = 0; i < involved.length; i++) {
-        const imported = involved[i];
-        if (imported.type == 'source') {
-            if (!imports[imported.from]) {
-                continue;
-            }
-            const incoming = imports[imported.from].filter(f => !involved.find(i => i.from == f.from));
-            involved.push(...incoming);
-        }
-    }
-    return involved;
-}
+// export function toSourcePath(source: string): string {
+//     return source.startsWith(normalizePath(`${compiledRoot}/`)) ?
+//         source.replace(compiledRoot, awadeRoot).replace(/\.js$/, '.ts').replace(/\.scss$/, '.css') :
+//         source;
+// }
 
 export function checkInvolved(changed: string[], involved: ImportedFile[]): boolean {
     return changed.filter(ch => involved.find(i => i.from == ch)).length > 0;

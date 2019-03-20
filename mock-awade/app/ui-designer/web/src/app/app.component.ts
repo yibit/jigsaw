@@ -1,17 +1,17 @@
-import {Component as CMP} from '@angular/core';
+import {Component} from '@angular/core';
+// import {basic} from "@awade/basics";
 
 // const data = require("./data.json");
-const Component = {};
 
-@CMP({
+@Component({
     selector: 'jigsaw-app',
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
     constructor() {
-        console.log('333ff33333333');
-
+        console.log('333ffff33ffffffffffffffffffffffff3fj33333');
+        // basic('xxxxxxxxxxxxxxxxxxxxxxxxx')
     }
     nextPinyin() {
         const pinyins = this.selectedInitials.concat(...this.selectedVowels).concat(...this.selectedWholeTone);

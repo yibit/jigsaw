@@ -1,0 +1,28 @@
+{
+    "name": "awade-basic-utilities",
+    "version": "1.0.0",
+    "description": "The basic utilities of awade, for internal use only",
+    "main": "./bundles/basics.umd.js",
+    "module": "./bundles/basics.es5.js",
+    "es2015": "./bundles/basics.js",
+    "typings": "./basics.d.ts",
+    "scripts": {
+        "build-compiler": "webpack --progress --profile --bail"
+    },
+    "repository": {
+        "type": "git"
+    },
+    "keywords": [
+        "awade",
+        "sdk",
+        "Jigsaw",
+        "angular",
+        "components",
+        "typescript"
+    ],
+    "license": "MIT",
+    "bugs": {
+        "url": "https://gitlab.zte.com.cn/10045812/ng-eval/issues"
+    },
+    "homepage": "http://rdk.zte.com.cn/vmax-studio/awade"
+}
