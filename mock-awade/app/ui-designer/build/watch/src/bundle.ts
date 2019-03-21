@@ -6,13 +6,14 @@ import {
     compiledRoot,
     expandPackagePath,
     getPath,
-    identifierAliases,
-    imports,
+    identifierAliases, isTypescriptSource,
     nodeModulesRoot,
-    reinit,
+    reinit, toImportsPath,
 } from "./shared";
-import {ImportedFile} from "./typings";
+import {ImportedFileMap, ImportFile} from "./typings";
 
+const importsBuffer: ImportedFileMap = {};
+stripLibFromVendorBundle();
 
 export function createServerBundle(changedFiles: string[], entryFile: string, outFile: string): void {
     const involved = traceInvolved(entryFile);
@@ -258,6 +259,16 @@ function addBundle2Index(outFile: string): void {
     fs.writeFileSync(indexFile, indexContent);
 }
 
+function stripLibFromVendorBundle() {
+    const vendorPath = `${awadeRoot}/web/out/vmax-studio/awade/vendor.bundle.js`;
+    const vendor = fs.readFileSync(vendorPath).toString();
+    const newVendor = vendor.replace(/\/\*\*\*\/ ".\/node_modules\/@awade\/.*?":\s[\s\S]*?\/\*\*\*\/ }\),?/g, '');
+    if (newVendor.length != vendor.length) {
+        fs.writeFileSync(vendorPath, newVendor);
+        console.log('awade libs in vendor.bundle.js is stripped!');
+    }
+}
+
 function generateAliasRollbackCode(): string {
     const mainBundleInvolved = traceInvolved(`${compiledRoot}/web/src/main.js`);
     const basicsBundleInvolved = traceInvolved(`${compiledRoot}/basics/src/public_api.js`);
@@ -286,14 +297,15 @@ function generateAliasRollbackCode(): string {
     return aliasRollback;
 }
 
-function traceInvolved(entry: string): ImportedFile[] {
-    const involved: ImportedFile[] = [{from: entry, type: "source", identifiers: null}];
+function traceInvolved(entry: string): ImportFile[] {
+    const involved: ImportFile[] = [{from: entry, type: "source", identifiers: null}];
     // 这个for不能改成forEach之类的，involved在循环过程中会变长
     for (let i = 0; i < involved.length; i++) {
         const imported = involved[i];
         if (imported.type == 'source' || imported.type == 'resource') {
-            if (imports[imported.from]) {
-                const incoming = imports[imported.from].filter(f => !involved.find(i => i.from == f.from));
+            const imports = getImports(imported.from);
+            if (imports) {
+                const incoming = imports.filter(f => !involved.find(i => i.from == f.from));
                 involved.push(...incoming);
             } else if (!involved.find(i => i.from == imported.from)) {
                 involved.push(imported);
@@ -301,4 +313,15 @@ function traceInvolved(entry: string): ImportedFile[] {
         }
     }
     return involved;
+}
+
+function getImports(file: string): ImportFile[] {
+    file = toImportsPath(file);
+    if (!fs.existsSync(file)) {
+        return [];
+    }
+    if (!importsBuffer.hasOwnProperty(file)) {
+        importsBuffer[file] = JSON.parse(fs.readFileSync(file).toString());
+    }
+    return importsBuffer[file];
 }

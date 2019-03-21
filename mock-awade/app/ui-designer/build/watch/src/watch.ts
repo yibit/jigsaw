@@ -1,6 +1,6 @@
 import * as fs from "fs";
 import * as chokidar from "chokidar";
-import {awadeRoot, changes, compiledRoot, normalizePath, saveImports, toCompiledPath} from "./shared";
+import {awadeRoot, changes, compiledRoot, normalizePath, toCompiledPath} from "./shared";
 import {compile, scriptFileNames, scriptVersions} from "./compile";
 import {ChangeEvent} from "./typings";
 import {createServerBundle, createWebBundle} from "./bundle";
@@ -35,11 +35,11 @@ function cacheChange(path: string, event: 'add' | 'change' | 'unlink'): void {
         sign = '+';
     }
     console.log(`${sign} ): ${path}`);
+    path = normalizePath(path);
     const idx = changes.findIndex(ch => ch.path == path && ch.event == event);
     if (idx != -1) {
         changes.splice(idx, 1);
     }
-    path = normalizePath(path);
     changes.push({path, event});
 
     clearTimeout(timerHandler);
@@ -65,7 +65,6 @@ function handleChanges(): void {
             processed.push(compiledPath);
         }
     }
-    saveImports();
 
     createServerBundle(processed,
         `${compiledRoot}/services/src/exports.js`,

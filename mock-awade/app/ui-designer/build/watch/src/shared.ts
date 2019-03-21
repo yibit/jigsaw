@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as ts from "typescript";
 import * as http from "http";
 import {getIdentifierAliases} from "../../../plugins/installer/vendor-alias-parser";
-import {Change, ImportedFile, ImportedFileMap, ImportFromType} from "./typings";
+import {Change, ImportFile, ImportType} from "./typings";
 
 export const builtInNodeModules = [
     'assert', 'async_hooks', 'child_process', 'cluster', 'console', 'crypto', 'dns', 'domain', 'events', 'fs',
@@ -19,7 +19,6 @@ export const nodeModulesRoot = normalizePath(`${awadeRoot}/web/node_modules`);
 export const identifierAliases = getIdentifierAliases(`${awadeRoot}/web/out/vmax-studio/awade/`);
 
 export const changes: Change[] = [];
-export const imports: ImportedFileMap = initImports();
 
 export function normalizePath(file: string): string {
     return path.resolve(file).replace(/\\/g, '/');
@@ -53,28 +52,22 @@ export function reinit(): void {
 
 export function toCompiledPath(source: string): string {
     return !source.startsWith(normalizePath(`${compiledRoot}/`)) ?
-        source.replace(awadeRoot, compiledRoot).replace(/\.ts$/, '.js').replace(/\.scss$/, '.css') :
+        source.replace(awadeRoot, compiledRoot)
+            .replace(/\.ts$/, '.js')
+            .replace(/\.scss$/, '.css') :
         source;
 }
 
-// export function toSourcePath(source: string): string {
-//     return source.startsWith(normalizePath(`${compiledRoot}/`)) ?
-//         source.replace(compiledRoot, awadeRoot).replace(/\.js$/, '.ts').replace(/\.scss$/, '.css') :
-//         source;
-// }
+export function toMD5Path(file: string): string {
+    return `${file}.md5`;
+}
 
-export function checkInvolved(changed: string[], involved: ImportedFile[]): boolean {
+export function toImportsPath(file: string): string {
+    return `${file}.import`;
+}
+
+export function checkInvolved(changed: string[], involved: ImportFile[]): boolean {
     return changed.filter(ch => involved.find(i => i.from == ch)).length > 0;
-}
-
-export function initImports(): ImportedFileMap {
-    const importsPath = './compiled/imports.json';
-    return fs.existsSync(importsPath) ? JSON.parse(fs.readFileSync(importsPath).toString()) : {};
-}
-
-export function saveImports(): void {
-    const importsPath = './compiled/imports.json';
-    fs.writeFileSync(importsPath, JSON.stringify(imports));
 }
 
 export function expandPackagePath(pkgPath: string): string {
@@ -100,8 +93,8 @@ export function expandPackagePath(pkgPath: string): string {
     return './node_modules/' + transformed;
 }
 
-export function predictImportType(from: string): ImportFromType {
-    let type: ImportFromType;
+export function predictImportType(from: string): ImportType {
+    let type: ImportType;
     if (from.match(/\.?\.\//)) {
         type = 'source';
     } else if (builtInNodeModules.indexOf(from) != -1) {
@@ -112,4 +105,8 @@ export function predictImportType(from: string): ImportFromType {
         type = "std_node_modules";
     }
     return type;
+}
+
+export function isTypescriptSource(file: string): boolean {
+    return !!file.match(/.+\.ts$/i);
 }

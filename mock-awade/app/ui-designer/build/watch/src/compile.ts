@@ -5,17 +5,21 @@ import * as MD5 from "md5.js";
 import {sync as mkdir} from "mkdirp";
 import {execSync as shell} from "child_process";
 import {
-    builtInNodeModules,
-    getPath,
-    getScriptSnapshot,
-    imports, nodeModulesRoot, normalizePath,
     awadeRoot,
-    toCompiledPath, expandPackagePath, predictImportType
+    expandPackagePath,
+    getPath,
+    getScriptSnapshot, isTypescriptSource,
+    nodeModulesRoot,
+    normalizePath,
+    predictImportType,
+    toCompiledPath, toImportsPath, toMD5Path
 } from "./shared";
-import {InjectedParam, ImportedFile, ImportFromType} from "./typings";
+import {ImportFile, ImportType, InjectedParam} from "./typings";
 
 export const scriptFileNames: string[] = [];
 export const scriptVersions = new Map<string, number>();
+
+const transformedRequireName = '__origin_require_transformed_by_awade';
 const servicesHost: ts.LanguageServiceHost = {
     getScriptFileNames: () => scriptFileNames,
     getScriptVersion: fileName => String(scriptVersions.get(fileName)),
@@ -37,7 +41,7 @@ export function compile(file: string): void {
     if (!fs.existsSync(file)) {
         return;
     }
-    if (file.match(/.+\.ts$/i)) {
+    if (isTypescriptSource(file)) {
         compileTypescript(file);
     } else if (file.match(/.+\.scss$/i)) {
         compileScss(file);
@@ -58,13 +62,15 @@ function compileTypescript(file: string): string {
 
     console.log('Compiling...');
     logErrors(file);
-    servicesHost.getCustomTransformers = () => ({before: [transformer(file)]});
+    const curImports: ImportFile[] = [];
+    servicesHost.getCustomTransformers = () => ({before: [transformer(file, curImports)]});
     compiled = services.getEmitOutput(file).outputFiles[0].text;
     compiled = fixCompiled(compiled);
     const compiledPath = toCompiledPath(file);
     mkdir(getPath(compiledPath));
     fs.writeFileSync(compiledPath, compiled);
-    fs.writeFileSync(compiledPath + '.md5', curMD5);
+    fs.writeFileSync(toMD5Path(compiledPath), curMD5);
+    fs.writeFileSync(toImportsPath(compiledPath), JSON.stringify(curImports));
     console.log('Compiled!');
 
     return compiled;
@@ -82,7 +88,7 @@ function compileScss(file: string): string {
     shell(cmd);
     compiled = fs.readFileSync(outFile).toString();
     fs.writeFileSync(outFile, compiled);
-    fs.writeFileSync(outFile + '.md5', curMD5);
+    fs.writeFileSync(toMD5Path(outFile), curMD5);
     console.log('Compiled!');
 
     return compiled;
@@ -90,7 +96,13 @@ function compileScss(file: string): string {
 
 function checkFingerPrint(file: string): [string, string] {
     const compiledPath = toCompiledPath(file);
-    let fingerPrint, md5Path = compiledPath + '.md5';
+    if (isTypescriptSource(file)) {
+        if (!fs.existsSync(toImportsPath(compiledPath))) {
+            return [null, null];
+        }
+    }
+
+    let fingerPrint, md5Path = toMD5Path(compiledPath);
     if (fs.existsSync(md5Path)) {
         fingerPrint = fs.readFileSync(md5Path).toString();
     }
@@ -122,16 +134,14 @@ function logErrors(fileName: string): void {
 }
 
 // 调试这个东西，一定要配合这个网站 https://ts-ast-viewer.com/
-function transformer<T extends ts.Node>(file: string): ts.TransformerFactory<any> {
-    const curPath = getPath(file), compiledPath = toCompiledPath(file);
-    const curImports: ImportedFile[] = [];
-    imports[compiledPath] = curImports;
+function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]): ts.TransformerFactory<any> {
+    const curPath = getPath(file);
 
     return (context): any => {
         const visit: ts.Visitor = (node: ts.Node) => {
             node = processImportDeclaration(node);
             node = processExportDeclaration(node);
-            // node = processConstructor(node);
+            node = processRequireCall(node);
             node = processDecorator(node);
             return ts.visitEachChild(node, (child) => visit(child), context);
         };
@@ -155,7 +165,7 @@ function transformer<T extends ts.Node>(file: string): ts.TransformerFactory<any
             identifiers = [clauseNode.getChildAt(2).getText()];
         }
         let from = node.getChildAt(3).getText().replace(/(^['"]\s*)|(\s*['"]$)/g, '');
-        let type: ImportFromType = predictImportType(from);
+        let type: ImportType = predictImportType(from);
         if (type == 'source') {
             from = toCompiledPath(normalizePath(path.resolve(curPath, from + '.ts')));
         }
@@ -175,6 +185,69 @@ function transformer<T extends ts.Node>(file: string): ts.TransformerFactory<any
         from = toCompiledPath(normalizePath(path.resolve(curPath, from + '.ts')));
         curImports.push({from, type: "source", identifiers: []});
         return ts.createIdentifier(`/* insert export function here */\n__export(require("${from}"));`);
+    }
+
+    function processRequireCall(node: ts.Node): ts.Node {
+        if (!ts.isCallExpression(node)) {
+            return node;
+        }
+        const identifier = node.getChildAt(0);
+        if (!ts.isIdentifier(identifier)) {
+            // 只处理直接 require('xx')
+            // 不处理 aa.require('xx')
+            return node;
+        }
+        if (identifier.getText() != 'require') {
+            return node;
+        }
+        const paramList = node.getChildAt(2);
+        if (paramList.getChildCount() != 1) {
+            return node;
+        }
+        const paramNode = paramList.getChildAt(0);
+        if (!ts.isStringLiteral(paramNode)) {
+            return node;
+        }
+
+
+        // if (!ts.isCallExpression(node)) {
+        //     return node;
+        // }
+        // const identifier = node.getChildAt(0);
+        // if (!ts.isIdentifier(identifier)) {
+        //     // 只处理直接 require('xx')
+        //     // 不处理 aa.require('xx')
+        //     return node;
+        // }
+        // if (identifier.getText() != 'require') {
+        //     return node;
+        // }
+        // const paramList = node.getChildAt(2);
+        // if (node.getChildCount() != 1) {
+        //     return node;
+        // }
+        // const paramNode = paramList.getChildAt(0);
+        // if (ts.isStringLiteral(paramNode)) {
+        //     return node;
+        // }
+        // // 在我们的场景中，所有直接调用require的，最终会被webpack转为module
+        // // 所以，这里直接模拟webpack的处理，而不认为require是一个node函数。
+        // const pattern = paramNode.getText();
+        // // webpack支持这样的写法
+        // // require('!!raw-loader!./data.json') 和 require('./data.json')
+        // // 前者会把json文件当做字符串返回，而后者返回的是json对象
+        // const match = pattern.match(/(!!(.*?)!)?(.*)/);
+        // const loader = match[2];
+        // const path = match[3];
+        // if (loader == 'raw-loader') {
+        //
+        // } else if (!loader) {
+        //
+        // } else {
+        //     throw new Error(`unsupported webpack require loader: ${loader}, fix me!`);
+        // }
+
+        return ts.createCall(ts.createIdentifier(transformedRequireName), node.typeArguments, node.arguments);
     }
 
     function processDecorator(node: ts.Node): ts.Node {
@@ -199,12 +272,16 @@ function transformer<T extends ts.Node>(file: string): ts.TransformerFactory<any
         // 下面这段用于处理原来渲染器里的 templateUrl/styleUrls 这2个字段的值
         const callNode: ts.CallExpression = decoratorNode.getChildAt(1) as ts.CallExpression;
         const propertiesNode = callNode.getChildAt(2).getChildAt(0).getChildAt(1);
+        if (!propertiesNode) {
+            // 把传给渲染器的对象写成变量的方式了，不理他
+            return node;
+        }
         const properties = propertiesNode.getChildren()
             .filter(c => c.kind == ts.SyntaxKind.PropertyAssignment)
             .map((propNode: ts.PropertyAssignment) => {
                 const prop = propNode.getChildAt(0).getText();
                 if (prop == 'templateUrl') {
-                    const resource: ImportedFile = {
+                    const resource: ImportFile = {
                         from: normalizeStringLiteralPath(propNode.getChildAt(2).getText()),
                         identifiers: null,
                         type: "resource"
@@ -221,7 +298,7 @@ function transformer<T extends ts.Node>(file: string): ts.TransformerFactory<any
                         .filter(c => c.kind == ts.SyntaxKind.StringLiteral)
                         .map(strLiter => normalizeStringLiteralPath(strLiter.getText()));
                     curImports.push(...cssResources.map(res => ({
-                        from: res, identifiers: null, type: "resource" as ImportFromType
+                        from: res, identifiers: null, type: "resource" as ImportType
                     })));
                     const arrLiterVal = cssResources
                         .map(str => ts.createCall(ts.createIdentifier('require'),
@@ -318,7 +395,11 @@ function fixCompiled(rawCompiled: string): string {
             for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
         }
     `;
-    rawCompiled = rawCompiled.replace('/* insert export function here */', exportDef);
+    rawCompiled = rawCompiled
+        // 在第一个插入标志上插入export实现
+        .replace('/* insert export function here */', exportDef)
+        // 删除多余的插入标志
+        .replace(/\/\* insert export function here \*\//g, '');
 
     if (rawCompiled.indexOf('__metadata("design:paramtypes"') != -1) {
         rawCompiled = `

@@ -1,7 +1,8 @@
 import {Component, NgModule} from "@angular/core";
 
 @Component({
-    template: 'hello component123'
+    template: 'hello ffffffffffffffffffaaaaaaaaaaaaaaaaaaaaaaaaa ',
+    selector: 'my-comp1'
 })
 export class MyComponent {
 
@@ -11,7 +12,8 @@ export class MyComponent {
     declarations: [
         MyComponent
     ],
-    imports: [
+    exports: [
+        MyComponent
     ],
     providers: [],
     entryComponents: []
