@@ -12,10 +12,9 @@ import {
     nodeModulesRoot,
     normalizePath,
     predictImportType,
-    toCompiledPath, toImportsPath, toMD5Path
+    toCompiledPath, toImportsPath, toMD5Path, importsBuffer
 } from "./shared";
 import {ImportFile, ImportType, InjectedParam} from "./typings";
-import {load} from "../../../plugins/installer/node_modules/tsconfig/dist/tsconfig";
 
 export const scriptFileNames: string[] = [];
 export const scriptVersions = new Map<string, number>();
@@ -72,6 +71,7 @@ function compileTypescript(file: string): string {
     fs.writeFileSync(compiledPath, compiled);
     fs.writeFileSync(toMD5Path(compiledPath), curMD5);
     fs.writeFileSync(toImportsPath(compiledPath), JSON.stringify(curImports));
+    importsBuffer[file] = curImports;
     console.log('Compiled!');
 
     return compiled;

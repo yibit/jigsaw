@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as ts from "typescript";
 import * as http from "http";
 import {getIdentifierAliases} from "../../../plugins/installer/vendor-alias-parser";
-import {Change, ImportFile, ImportType} from "./typings";
+import {Change, ImportedFileMap, ImportFile, ImportType} from "./typings";
 
 export const builtInNodeModules = [
     'assert', 'async_hooks', 'child_process', 'cluster', 'console', 'crypto', 'dns', 'domain', 'events', 'fs',
@@ -17,6 +17,7 @@ export const awadeRoot = normalizePath(`${__dirname}/../../../../../..`);
 export const compiledRoot = normalizePath(`${awadeRoot}/build/watch/compiled`);
 export const nodeModulesRoot = normalizePath(`${awadeRoot}/web/node_modules`);
 export const identifierAliases = getIdentifierAliases(`${awadeRoot}/web/out/vmax-studio/awade/`);
+export const importsBuffer: ImportedFileMap = {};
 
 export const changes: Change[] = [];
 

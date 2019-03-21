@@ -6,13 +6,12 @@ import {
     compiledRoot,
     expandPackagePath,
     getPath,
-    identifierAliases, isTypescriptSource,
+    identifierAliases, importsBuffer, isTypescriptSource,
     nodeModulesRoot,
     reinit, toImportsPath,
 } from "./shared";
 import {ImportedFileMap, ImportFile, ProcessedContent} from "./typings";
 
-const importsBuffer: ImportedFileMap = {};
 stripLibFromVendorBundle();
 
 export function createServerBundle(changedFiles: string[], entryFile: string, outFile: string): void {
