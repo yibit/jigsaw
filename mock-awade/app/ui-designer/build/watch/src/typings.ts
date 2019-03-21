@@ -5,3 +5,4 @@ export type ImportedFileMap = { [path: string]: ImportFile[] };
 export type InjectedParam = { name: string, type: string, from: string };
 export type ChangeEvent = 'add' | 'change' | 'unlink' | 'ref';
 export type Change = { compiled?: string, path: string, event: ChangeEvent };
+export type ProcessedContent = { content: string, from: string };

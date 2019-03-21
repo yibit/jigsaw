@@ -15,6 +15,7 @@ import {
     toCompiledPath, toImportsPath, toMD5Path
 } from "./shared";
 import {ImportFile, ImportType, InjectedParam} from "./typings";
+import {load} from "../../../plugins/installer/node_modules/tsconfig/dist/tsconfig";
 
 export const scriptFileNames: string[] = [];
 export const scriptVersions = new Map<string, number>();
@@ -108,7 +109,8 @@ function checkFingerPrint(file: string): [string, string] {
     }
     const source = fs.readFileSync(file);
     const curMD5 = new MD5().update(source).digest('hex');
-    const content = curMD5 == fingerPrint ? fs.readFileSync(compiledPath).toString() : null;
+    const content = curMD5 == fingerPrint && fs.existsSync(compiledPath) ?
+        fs.readFileSync(compiledPath).toString() : null;
     return [curMD5, content];
 }
 
@@ -191,7 +193,14 @@ function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]):
         if (!ts.isCallExpression(node)) {
             return node;
         }
-        const identifier = node.getChildAt(0);
+        let identifier;
+        try {
+            identifier = node.getChildAt(0);
+        } catch (e) {
+            // 前面改动了渲染器有问题，导致智力无法获取child
+            // 这个问题貌似对最终生成的代码没啥影响，不管了
+            return node;
+        }
         if (!ts.isIdentifier(identifier)) {
             // 只处理直接 require('xx')
             // 不处理 aa.require('xx')
@@ -209,45 +218,25 @@ function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]):
             return node;
         }
 
+        // webpack支持这样的写法
+        // require('!!raw-loader!./data.json') 和 require('./data.json')
+        // 前者会把json文件当做字符串返回，而后者返回的是json对象
 
-        // if (!ts.isCallExpression(node)) {
-        //     return node;
-        // }
-        // const identifier = node.getChildAt(0);
-        // if (!ts.isIdentifier(identifier)) {
-        //     // 只处理直接 require('xx')
-        //     // 不处理 aa.require('xx')
-        //     return node;
-        // }
-        // if (identifier.getText() != 'require') {
-        //     return node;
-        // }
-        // const paramList = node.getChildAt(2);
-        // if (node.getChildCount() != 1) {
-        //     return node;
-        // }
-        // const paramNode = paramList.getChildAt(0);
-        // if (ts.isStringLiteral(paramNode)) {
-        //     return node;
-        // }
-        // // 在我们的场景中，所有直接调用require的，最终会被webpack转为module
-        // // 所以，这里直接模拟webpack的处理，而不认为require是一个node函数。
-        // const pattern = paramNode.getText();
-        // // webpack支持这样的写法
-        // // require('!!raw-loader!./data.json') 和 require('./data.json')
-        // // 前者会把json文件当做字符串返回，而后者返回的是json对象
-        // const match = pattern.match(/(!!(.*?)!)?(.*)/);
-        // const loader = match[2];
-        // const path = match[3];
-        // if (loader == 'raw-loader') {
-        //
-        // } else if (!loader) {
-        //
-        // } else {
-        //     throw new Error(`unsupported webpack require loader: ${loader}, fix me!`);
-        // }
-
-        return ts.createCall(ts.createIdentifier(transformedRequireName), node.typeArguments, node.arguments);
+        // 这个写法与下游处理资源有冲突，这里要转换一下，抹平这个区别
+        // raw-loader == 普通资源处理方式，需要删除
+        // 而原不带loader的，表示用node的方式处理，需要增加node-loader标志
+        const pattern = paramNode.getText().replace(/(^['"])|(['"]$)/g, '');
+        const match = pattern.match(/(!!.*?!)?(.*)/);
+        let loader = match[1];
+        if (!!loader && loader != '!!raw-loader!') {
+            throw new Error(`unsupported webpack loader ${loader}, fix me!`);
+        }
+        loader = !!loader ? '' : '!!node-loader!';
+        const file = loader + toCompiledPath(normalizePath(path.resolve(curPath, match[2])));
+        console.log('-----------------', pattern, loader, file);
+        curImports.push({type: "resource", identifiers: null, from: file});
+        return ts.createCall(ts.createIdentifier(transformedRequireName),
+            node.typeArguments, [ts.createLiteral(file)]);
     }
 
     function processDecorator(node: ts.Node): ts.Node {
@@ -289,7 +278,7 @@ function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]):
                     curImports.push(resource);
                     return ts.createPropertyAssignment(
                         ts.createIdentifier('template'),
-                        ts.createCall(ts.createIdentifier('require'), undefined, [
+                        ts.createCall(ts.createIdentifier('require'), [], [
                             ts.createLiteral(resource.from)
                         ])
                     )
@@ -302,7 +291,7 @@ function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]):
                     })));
                     const arrLiterVal = cssResources
                         .map(str => ts.createCall(ts.createIdentifier('require'),
-                            undefined, [ts.createLiteral(str)]));
+                            [], [ts.createLiteral(str)]));
                     return ts.createPropertyAssignment(
                         ts.createIdentifier('styles'),
                         ts.createArrayLiteral(arrLiterVal, false)
@@ -396,7 +385,7 @@ function fixCompiled(rawCompiled: string): string {
         }
     `;
     rawCompiled = rawCompiled
-        // 在第一个插入标志上插入export实现
+    // 在第一个插入标志上插入export实现
         .replace('/* insert export function here */', exportDef)
         // 删除多余的插入标志
         .replace(/\/\* insert export function here \*\//g, '');

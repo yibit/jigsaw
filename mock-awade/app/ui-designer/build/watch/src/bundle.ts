@@ -10,7 +10,7 @@ import {
     nodeModulesRoot,
     reinit, toImportsPath,
 } from "./shared";
-import {ImportedFileMap, ImportFile} from "./typings";
+import {ImportedFileMap, ImportFile, ProcessedContent} from "./typings";
 
 const importsBuffer: ImportedFileMap = {};
 stripLibFromVendorBundle();
@@ -25,8 +25,8 @@ export function createServerBundle(changedFiles: string[], entryFile: string, ou
     const logFile = `${compiledRoot}/services/src/utils/log.js`;
     const consoleDef = `var console = require("${logFile}");`;
     // 编译好的块需要根据当前输出目标做一些具体化的处理
-    const processed = involved.map(module => {
-        const result = {content: '', from: module.from};
+    const processedScripts = involved.map(module => {
+        let result = {content: '', from: module.from};
         const pkgJson = `${nodeModulesRoot}/${module.from}/package.json`;
         if (module.type == "std_node_modules" && fs.existsSync(pkgJson)) {
             if (isCreatingServices) {
@@ -48,13 +48,22 @@ export function createServerBundle(changedFiles: string[], entryFile: string, ou
         }
         return result;
     });
+    const processedResources: ProcessedContent[] = involved
+        .filter(module => module.type == "resource")
+        .map(module => parseResource(module));
 
     console.log(`Creating bundle ${outFile} ...`);
     let out = '';
-    processed.forEach(module => {
+    processedScripts.forEach(module => {
         out += `/***/ "${module.from}":\n`;
         out += '/***/ (function(module, exports, require) {\n';
         out += module.content + '\n';
+        out += '/***/ }),\n\n';
+    });
+    processedResources.forEach(module => {
+        out += `/***/ "${module.from}":\n`;
+        out += '/***/ (function(module, exports) {\n';
+        out += `module.exports = ${module.content};\n`;
         out += '/***/ }),\n\n';
     });
 
@@ -150,7 +159,6 @@ export function createWebBundle(changedFiles: string[], bundleName: string, entr
         return;
     }
 
-    type ProcessedContent = { content: string, from: string };
     const processedScripts: ProcessedContent[] = involved
         .filter(module => module.type == 'source')
         .map(module => {
@@ -164,12 +172,10 @@ export function createWebBundle(changedFiles: string[], bundleName: string, entr
                 });
             return {content, from: module.from};
         });
+    console.log(involved);
     const processedResources: ProcessedContent[] = involved
         .filter(module => module.type == "resource")
-        .map(module => ({
-            content: fs.readFileSync(module.from).toString().replace(/\r?\n/g, "\\n").replace(/"/g, '\\"'),
-            from: module.from
-        }));
+        .map(module => parseResource(module));
 
     console.log(`Creating bundle ${outFile} ...`);
     let out = '';
@@ -182,7 +188,7 @@ export function createWebBundle(changedFiles: string[], bundleName: string, entr
     processedResources.forEach(module => {
         out += `/***/ "${module.from}":\n`;
         out += '/***/ (function(module, exports) {\n';
-        out += `module.exports = "${module.content}";\n`;
+        out += `module.exports = ${module.content};\n`;
         out += '/***/ }),\n\n';
     });
 
@@ -303,6 +309,7 @@ function traceInvolved(entry: string): ImportFile[] {
     for (let i = 0; i < involved.length; i++) {
         const imported = involved[i];
         if (imported.type == 'source' || imported.type == 'resource') {
+            console.log('2222222222222222', imported.from);
             const imports = getImports(imported.from);
             if (imports) {
                 const incoming = imports.filter(f => !involved.find(i => i.from == f.from));
@@ -324,4 +331,20 @@ function getImports(file: string): ImportFile[] {
         importsBuffer[file] = JSON.parse(fs.readFileSync(file).toString());
     }
     return importsBuffer[file];
+}
+
+function parseResource(resource: ImportFile): ProcessedContent {
+    // 这里拿到的resource有可能是webpack资源，注意webpack的loader已经在compile.ts被改写成 node-loader 了
+    const match = resource.from.match(/(!!node-loader!)?(.*)/);
+    const hasLoader = !!match[1];
+    const file = match[2];
+    console.log('11111111111111', hasLoader, file, resource.from);
+
+    let result: ProcessedContent = {content: null, from: file};
+    result.content = fs.readFileSync(file).toString();
+    if (!hasLoader) {
+        // 按照普通文本资源方式处理
+        result.content = `"${result.content.replace(/\r/g, '\\r').replace(/\n/g, '\\n').replace(/"/g, '\\"')}"`;
+    }
+    return result;
 }
