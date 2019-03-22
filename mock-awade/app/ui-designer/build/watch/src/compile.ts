@@ -12,14 +12,13 @@ import {
     nodeModulesRoot,
     normalizePath,
     predictImportType,
-    toCompiledPath, toImportsPath, toMD5Path, importsBuffer
+    toCompiledPath, toImportsPath, toMD5Path, importsBuffer, transformedRequireName
 } from "./shared";
 import {ImportFile, ImportType, InjectedParam} from "./typings";
 
 export const scriptFileNames: string[] = [];
 export const scriptVersions = new Map<string, number>();
 
-const transformedRequireName = '__origin_require_transformed_by_awade';
 const servicesHost: ts.LanguageServiceHost = {
     getScriptFileNames: () => scriptFileNames,
     getScriptVersion: fileName => String(scriptVersions.get(fileName)),
@@ -71,9 +70,9 @@ function compileTypescript(file: string): string {
     fs.writeFileSync(compiledPath, compiled);
     fs.writeFileSync(toMD5Path(compiledPath), curMD5);
     fs.writeFileSync(toImportsPath(compiledPath), JSON.stringify(curImports));
-    importsBuffer[file] = curImports;
-    console.log('Compiled!');
+    importsBuffer[toCompiledPath(file)] = curImports;
 
+    console.log('Compiled!');
     return compiled;
 }
 
@@ -233,7 +232,6 @@ function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]):
         }
         loader = !!loader ? '' : '!!node-loader!';
         const file = loader + toCompiledPath(normalizePath(path.resolve(curPath, match[2])));
-        console.log('-----------------', pattern, loader, file);
         curImports.push({type: "resource", identifiers: null, from: file});
         return ts.createCall(ts.createIdentifier(transformedRequireName),
             node.typeArguments, [ts.createLiteral(file)]);

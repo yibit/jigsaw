@@ -6,12 +6,15 @@ import {
     compiledRoot,
     expandPackagePath,
     getPath,
-    identifierAliases, importsBuffer, isTypescriptSource,
+    identifierAliases,
+    importsBuffer,
     nodeModulesRoot,
-    reinit, toImportsPath,
+    reinit,
+    toImportsPath, transformedRequireName,
 } from "./shared";
-import {ImportedFileMap, ImportFile, ProcessedContent} from "./typings";
+import {ImportFile, ProcessedContent} from "./typings";
 
+const transformedRequireRegexp = new RegExp(`\\b${transformedRequireName}\\b`, 'g');
 stripLibFromVendorBundle();
 
 export function createServerBundle(changedFiles: string[], entryFile: string, outFile: string): void {
@@ -24,29 +27,31 @@ export function createServerBundle(changedFiles: string[], entryFile: string, ou
     const logFile = `${compiledRoot}/services/src/utils/log.js`;
     const consoleDef = `var console = require("${logFile}");`;
     // 编译好的块需要根据当前输出目标做一些具体化的处理
-    const processedScripts = involved.map(module => {
-        let result = {content: '', from: module.from};
-        const pkgJson = `${nodeModulesRoot}/${module.from}/package.json`;
-        if (module.type == "std_node_modules" && fs.existsSync(pkgJson)) {
-            if (isCreatingServices) {
-                const pkgInfo = require(pkgJson);
-                if (!pkgInfo.main) {
-                    throw new Error("Error: invalid required node_modules: " + module.from);
+    const processedScripts = involved
+        .filter(module => ["std_node_modules", "non_std_node_modules", "source"].indexOf(module.type) != -1)
+        .map(module => {
+            let result = {content: '', from: module.from};
+            const pkgJson = `${nodeModulesRoot}/${module.from}/package.json`;
+            if (module.type == "std_node_modules" && fs.existsSync(pkgJson)) {
+                if (isCreatingServices) {
+                    const pkgInfo = require(pkgJson);
+                    if (!pkgInfo.main) {
+                        throw new Error("Error: invalid required node_modules: " + module.from);
+                    }
+                    result.content = fs.readFileSync(`${nodeModulesRoot}/${module.from}/${pkgInfo.main}`).toString();
+                } else {
+                    result.content = `module.exports = require("${module.from}");`;
                 }
-                result.content = fs.readFileSync(`${nodeModulesRoot}/${module.from}/${pkgInfo.main}`).toString();
-            } else {
-                result.content = `module.exports = require("${module.from}");`;
+            } else if (module.type == 'non_std_node_modules') {
+                throw new Error('non_std_node_modules in services: fix me!');
+            } else if (module.type == 'source') {
+                result.content = fs.readFileSync(module.from).toString().replace(transformedRequireRegexp, 'require');
+                if (isCreatingServices && result.content.indexOf(consoleDef) == -1 && logFile != module.from) {
+                    result.content = `${consoleDef}\n${result.content}`;
+                }
             }
-        } else if (module.type == 'non_std_node_modules') {
-            throw new Error('non_std_node_modules in services: fix me!');
-        } else if (module.type == 'source') {
-            result.content = fs.readFileSync(module.from).toString();
-            if (isCreatingServices && result.content.indexOf(consoleDef) == -1 && logFile != module.from) {
-                result.content = `${consoleDef}\n${result.content}`;
-            }
-        }
-        return result;
-    });
+            return result;
+        });
     const processedResources: ProcessedContent[] = involved
         .filter(module => module.type == "resource")
         .map(module => parseResource(module));
@@ -168,10 +173,10 @@ export function createWebBundle(changedFiles: string[], bundleName: string, entr
                     } else {
                         return found;
                     }
-                });
+                })
+                .replace(transformedRequireRegexp, 'require');
             return {content, from: module.from};
         });
-    console.log(involved);
     const processedResources: ProcessedContent[] = involved
         .filter(module => module.type == "resource")
         .map(module => parseResource(module));
@@ -308,7 +313,6 @@ function traceInvolved(entry: string): ImportFile[] {
     for (let i = 0; i < involved.length; i++) {
         const imported = involved[i];
         if (imported.type == 'source' || imported.type == 'resource') {
-            console.log('2222222222222222', imported.from);
             const imports = getImports(imported.from);
             if (imports) {
                 const incoming = imports.filter(f => !involved.find(i => i.from == f.from));
@@ -322,14 +326,13 @@ function traceInvolved(entry: string): ImportFile[] {
 }
 
 function getImports(file: string): ImportFile[] {
-    file = toImportsPath(file);
-    if (!fs.existsSync(file)) {
-        return [];
-    }
+    const importFilePath = toImportsPath(file);
     if (!importsBuffer.hasOwnProperty(file)) {
-        importsBuffer[file] = JSON.parse(fs.readFileSync(file).toString());
+        importsBuffer[file] = fs.existsSync(importFilePath) ? JSON.parse(fs.readFileSync(importFilePath).toString()) : [];
     }
-    return importsBuffer[file];
+
+    // 深拷贝一份，避免缓存被误改
+    return JSON.parse(JSON.stringify(importsBuffer[file]));
 }
 
 function parseResource(resource: ImportFile): ProcessedContent {
@@ -337,13 +340,15 @@ function parseResource(resource: ImportFile): ProcessedContent {
     const match = resource.from.match(/(!!node-loader!)?(.*)/);
     const hasLoader = !!match[1];
     const file = match[2];
-    console.log('11111111111111', hasLoader, file, resource.from);
 
-    let result: ProcessedContent = {content: null, from: file};
+    let result: ProcessedContent = {content: null, from: resource.from};
     result.content = fs.readFileSync(file).toString();
     if (!hasLoader) {
         // 按照普通文本资源方式处理
-        result.content = `"${result.content.replace(/\r/g, '\\r').replace(/\n/g, '\\n').replace(/"/g, '\\"')}"`;
+        result.content = `"${result.content
+            .replace(/\r/g, '\\r')
+            .replace(/\n/g, '\\n')
+            .replace(/"/g, '\\"')}"`;
     }
     return result;
 }

@@ -16,6 +16,7 @@ export const builtInNodeModules = [
 export const awadeRoot = normalizePath(`${__dirname}/../../../../../..`);
 export const compiledRoot = normalizePath(`${awadeRoot}/build/watch/compiled`);
 export const nodeModulesRoot = normalizePath(`${awadeRoot}/web/node_modules`);
+export const transformedRequireName = '__origin_require_transformed_by_awade';
 export const identifierAliases = getIdentifierAliases(`${awadeRoot}/web/out/vmax-studio/awade/`);
 export const importsBuffer: ImportedFileMap = {};
 
