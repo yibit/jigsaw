@@ -347,6 +347,7 @@ function parseResource(resource: ImportFile): ProcessedContent {
     if (!hasLoader) {
         // 按照普通文本资源方式处理
         result.content = `"${result.content
+            .replace(/\\/g, '\\\\')
             .replace(/\r/g, '\\r')
             .replace(/\n/g, '\\n')
             .replace(/"/g, '\\"')}"`;

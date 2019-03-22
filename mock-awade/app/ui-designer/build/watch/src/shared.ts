@@ -19,6 +19,7 @@ export const nodeModulesRoot = normalizePath(`${awadeRoot}/web/node_modules`);
 export const transformedRequireName = '__origin_require_transformed_by_awade';
 export const identifierAliases = getIdentifierAliases(`${awadeRoot}/web/out/vmax-studio/awade/`);
 export const importsBuffer: ImportedFileMap = {};
+export const version = require(`${compiledRoot}/../config.json`).version;
 
 export const changes: Change[] = [];
 

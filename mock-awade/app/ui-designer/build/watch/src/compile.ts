@@ -12,7 +12,7 @@ import {
     nodeModulesRoot,
     normalizePath,
     predictImportType,
-    toCompiledPath, toImportsPath, toMD5Path, importsBuffer, transformedRequireName
+    toCompiledPath, toImportsPath, toMD5Path, importsBuffer, transformedRequireName, version
 } from "./shared";
 import {ImportFile, ImportType, InjectedParam} from "./typings";
 
@@ -62,7 +62,7 @@ function compileTypescript(file: string): string {
     }
 
     console.log('Compiling...');
-    // logErrors(file);
+    logErrors(file);
     const curImports: ImportFile[] = [];
     servicesHost.getCustomTransformers = () => ({before: [transformer(file, curImports)]});
     compiled = services.getEmitOutput(file).outputFiles[0].text;
@@ -99,7 +99,7 @@ function compileScss(file: string): string {
 function checkFingerPrint(file: string): [string, string] {
     const compiledPath = toCompiledPath(file);
     const source = fs.readFileSync(file);
-    const curMD5 = new MD5().update(source).digest('hex');
+    const curMD5 = new MD5().update(version + source).digest('hex');
 
     if (isTypescriptSource(file) && !fs.existsSync(toImportsPath(compiledPath))) {
         return [curMD5, null];

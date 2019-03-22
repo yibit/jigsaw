@@ -4,6 +4,7 @@ import {awadeRoot, changes, compiledRoot, normalizePath, toCompiledPath} from ".
 import {compile, scriptFileNames, scriptVersions} from "./compile";
 import {ChangeEvent} from "./typings";
 import {createServerBundle, createWebBundle} from "./bundle";
+import {downloadCompiledFiles, updateCachedVersion} from "./cache";
 
 // 重置plugins/index.ts文件，这个在编译过程中会被修改
 fs.writeFileSync(`${awadeRoot}/compiler/module/src/plugins/index.ts`,
@@ -22,10 +23,14 @@ const watcher = chokidar.watch(watchingDirs, {
         pollInterval: 100
     },
 });
-watcher
-    .on('add', path => cacheChange(path, 'add'))
-    .on('change', path => cacheChange(path, 'change'))
-    .on('unlink', path => cacheChange(path, 'unlink'));
+const compileOnly = process.argv[2] == 'compile-only';
+
+downloadCompiledFiles().then(() => {
+    watcher
+        .on('add', path => cacheChange(path, 'add'))
+        .on('change', path => cacheChange(path, 'change'))
+        .on('unlink', path => cacheChange(path, 'unlink'));
+});
 
 let timerHandler = null;
 
@@ -92,6 +97,11 @@ function handleChanges(): void {
     createWebBundle(processed, 'main',
         `${compiledRoot}/web/src/main.js`,
         `${awadeRoot}/web/out/vmax-studio/awade/main.bundle.js`);
+
+    updateCachedVersion();
+    if (compileOnly) {
+        process.exit(0);
+    }
 }
 
 function updateTypescriptFiles(sourcePath: string, event: ChangeEvent): void {
