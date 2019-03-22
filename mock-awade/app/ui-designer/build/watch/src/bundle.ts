@@ -169,7 +169,8 @@ export function createWebBundle(changedFiles: string[], bundleName: string, entr
             const content = fs.readFileSync(module.from).toString()
                 .replace(/\brequire\("(.*)"\);/g, (found, pkg) => {
                     if (involved.find(i => (i.type == 'std_node_modules' || i.type == 'non_std_node_modules') && i.from == pkg)) {
-                        return `require("${expandPackagePath(pkg)}");`;
+                        const identifiers = involved.find(i => i.from == pkg).identifiers;
+                        return `require("${expandPackagePath(pkg, identifiers)}");`;
                     } else {
                         return found;
                     }
@@ -290,7 +291,7 @@ function generateAliasRollbackCode(): string {
         // 去重
         .filter((item, idx, arr) => idx == arr.findIndex(i => i.from == item.from))
         .forEach(importInfo => {
-            const pkg = expandPackagePath(importInfo.from);
+            const pkg = expandPackagePath(importInfo.from, importInfo.identifiers);
             const aliases = identifierAliases[pkg];
             if (!aliases) {
                 console.warn('no alias info found:', pkg);

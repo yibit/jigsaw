@@ -19,6 +19,8 @@ import {ImportFile, ImportType, InjectedParam} from "./typings";
 export const scriptFileNames: string[] = [];
 export const scriptVersions = new Map<string, number>();
 
+const nodeSass = path.resolve(nodeModulesRoot, '.bin', 'node-sass');
+
 const servicesHost: ts.LanguageServiceHost = {
     getScriptFileNames: () => scriptFileNames,
     getScriptVersion: fileName => String(scriptVersions.get(fileName)),
@@ -60,7 +62,7 @@ function compileTypescript(file: string): string {
     }
 
     console.log('Compiling...');
-    logErrors(file);
+    // logErrors(file);
     const curImports: ImportFile[] = [];
     servicesHost.getCustomTransformers = () => ({before: [transformer(file, curImports)]});
     compiled = services.getEmitOutput(file).outputFiles[0].text;
@@ -84,7 +86,7 @@ function compileScss(file: string): string {
 
     console.log('Compiling...');
     const outFile = toCompiledPath(file);
-    const cmd = `${nodeModulesRoot}\\.bin\\node-sass --output-style compressed -o ${getPath(outFile)} ${file}`;
+    const cmd = `${nodeSass} --output-style compressed -o ${getPath(outFile)} ${file}`;
     shell(cmd);
     compiled = fs.readFileSync(outFile).toString();
     fs.writeFileSync(outFile, compiled);
@@ -96,18 +98,17 @@ function compileScss(file: string): string {
 
 function checkFingerPrint(file: string): [string, string] {
     const compiledPath = toCompiledPath(file);
-    if (isTypescriptSource(file)) {
-        if (!fs.existsSync(toImportsPath(compiledPath))) {
-            return [null, null];
-        }
+    const source = fs.readFileSync(file);
+    const curMD5 = new MD5().update(source).digest('hex');
+
+    if (isTypescriptSource(file) && !fs.existsSync(toImportsPath(compiledPath))) {
+        return [curMD5, null];
     }
 
     let fingerPrint, md5Path = toMD5Path(compiledPath);
     if (fs.existsSync(md5Path)) {
         fingerPrint = fs.readFileSync(md5Path).toString();
     }
-    const source = fs.readFileSync(file);
-    const curMD5 = new MD5().update(source).digest('hex');
     const content = curMD5 == fingerPrint && fs.existsSync(compiledPath) ?
         fs.readFileSync(compiledPath).toString() : null;
     return [curMD5, content];
@@ -166,6 +167,7 @@ function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]):
             identifiers = [clauseNode.getChildAt(2).getText()];
         }
         let from = node.getChildAt(3).getText().replace(/(^['"]\s*)|(\s*['"]$)/g, '');
+        from = fs.existsSync(`${curPath}/${from}/index.ts`) ? `${from}/index` : from;
         let type: ImportType = predictImportType(from);
         if (type == 'source') {
             from = toCompiledPath(normalizePath(path.resolve(curPath, from + '.ts')));
@@ -307,9 +309,9 @@ function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]):
             const type = predictImportType(param.from);
             let requirePath;
             if (type == 'source') {
-                requirePath = toCompiledPath(normalizePath(path.resolve(curPath, param.from + '.ts')));
+                requirePath = param.from;
             } else {
-                // std non std node module
+                // std or non std node module
                 requirePath = expandPackagePath(param.from);
             }
             return ts.createPropertyAccess(

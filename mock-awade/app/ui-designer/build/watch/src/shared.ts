@@ -72,21 +72,36 @@ export function checkInvolved(changed: string[], involved: ImportFile[]): boolea
     return changed.filter(ch => involved.find(i => i.from == ch)).length > 0;
 }
 
-export function expandPackagePath(pkgPath: string): string {
+export function expandPackagePath(pkgPath: string, identifiers?: string[]): string {
     if (pkgPath.startsWith('@awade/')) {
         // 内置模块
         return pkgPath;
+    }
+
+    if (pkgPath.startsWith('rxjs/')) {
+        // expand rxjs
+        return `./node_modules/${pkgPath}.js`;
     }
 
     const pkgJson = `${nodeModulesRoot}/${pkgPath}/package.json`;
     let transformed, type = predictImportType(pkgPath);
     if (type == "std_node_modules" && fs.existsSync(pkgJson)) {
         const pkgInfo = require(pkgJson);
-        if (!pkgInfo.module) {
+        const index = pkgInfo.module || pkgInfo.main;
+        let transformedPath;
+        if (index) {
+            transformedPath = `${nodeModulesRoot}/${pkgPath}/${index}`;
+        } else if (identifiers && identifiers.length > 0) {
+            // 类似uuid这样的奇葩
+            const identifier = identifiers[0].split(/\s*as\s*/)[0];
+            transformedPath = `${nodeModulesRoot}/${pkgPath}/${identifier}.js`;
+            if (!fs.existsSync(transformedPath)) {
+                throw new Error("Error: invalid required node_modules: " + pkgPath);
+            }
+        } else {
             throw new Error("Error: invalid required node_modules: " + pkgPath);
         }
-        transformed = normalizePath(`${nodeModulesRoot}/${pkgPath}/${pkgInfo.module}`)
-            .substring(nodeModulesRoot.length + 1);
+        transformed = normalizePath(transformedPath).substring(nodeModulesRoot.length + 1);
     } else {
         // non_std_node_modules
         transformed = normalizePath(`${nodeModulesRoot}/${pkgPath}.js`)
@@ -95,9 +110,14 @@ export function expandPackagePath(pkgPath: string): string {
     return './node_modules/' + transformed;
 }
 
+function expandRxjs(pkgPath: string): string {
+    return `./node_modules/${pkgPath}.js`;
+}
+
 export function predictImportType(from: string): ImportType {
     let type: ImportType;
-    if (from.match(/\.?\.\//)) {
+    // compile.ts中会送带有绝对路径的文件过来检测
+    if (from.match(/\.?\.\//) || from.startsWith(compiledRoot)) {
         type = 'source';
     } else if (builtInNodeModules.indexOf(from) != -1) {
         type = "node_built_in";

@@ -5,10 +5,14 @@ import {compile, scriptFileNames, scriptVersions} from "./compile";
 import {ChangeEvent} from "./typings";
 import {createServerBundle, createWebBundle} from "./bundle";
 
+// 重置plugins/index.ts文件，这个在编译过程中会被修改
+fs.writeFileSync(`${awadeRoot}/compiler/module/src/plugins/index.ts`,
+    fs.readFileSync(`${awadeRoot}/plugins/installer/plugins-index.template.ts`));
 
 const watchingDirs = [
     `${awadeRoot}/basics/src`, `${awadeRoot}/compiler/module/src`,
-    `${awadeRoot}/services/src`, `${awadeRoot}/web/src`, `${awadeRoot}/sdk/src`
+    `${awadeRoot}/services/src`, `${awadeRoot}/web/src`, `${awadeRoot}/sdk/src`,
+    normalizePath(`${awadeRoot}/plugins/installer/installer.type.ts`)
 ];
 const watcher = chokidar.watch(watchingDirs, {
     ignored: /(.*\.(.*___jb_\w+___|d\.ts|spec\.ts|gitkeep)$)|(awade[cu]\.js)|(package(-lock)?\.json)/,
@@ -79,6 +83,12 @@ function handleChanges(): void {
     createWebBundle(processed, '@awade/basics',
         `${compiledRoot}/basics/src/public_api.js`,
         `${awadeRoot}/web/out/vmax-studio/awade/basics.bundle.js`);
+    createWebBundle(processed, '@awade/uid-sdk',
+        `${compiledRoot}/sdk/src/public_api.js`,
+        `${awadeRoot}/web/out/vmax-studio/awade/uid-sdk.bundle.js`);
+    createWebBundle(processed, '@awade/compiler',
+        `${compiledRoot}/compiler/module/src/public_api.js`,
+        `${awadeRoot}/web/out/vmax-studio/awade/compiler.bundle.js`);
     createWebBundle(processed, 'main',
         `${compiledRoot}/web/src/main.js`,
         `${awadeRoot}/web/out/vmax-studio/awade/main.bundle.js`);
