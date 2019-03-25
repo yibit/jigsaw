@@ -4,7 +4,7 @@ import {awadeRoot, changes, compiledRoot, normalizePath, toCompiledPath} from ".
 import {compile, scriptFileNames, scriptVersions} from "./compile";
 import {ChangeEvent} from "./typings";
 import {createServerBundle, createWebBundle} from "./bundle";
-import {downloadCompiledFiles, initialized, updateCachedVersion} from "./cache";
+import {downloadCompiledFiles, initialized} from "./cache";
 
 // 重置plugins/index.ts文件，这个在编译过程中会被修改
 fs.writeFileSync(`${awadeRoot}/compiler/module/src/plugins/index.ts`,
@@ -70,7 +70,6 @@ function handleChanges(): void {
         if (!change) {
             break;
         }
-
         updateTypescriptFiles(change.path, change.event);
         console.log('Processing file', change.path);
         compile(change.path);
@@ -103,7 +102,6 @@ function handleChanges(): void {
         `${compiledRoot}/web/src/main.js`,
         `${awadeRoot}/web/out/vmax-studio/awade/main.bundle.js`);
 
-    updateCachedVersion();
     if (compileOnly) {
         process.exit(0);
     }

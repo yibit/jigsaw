@@ -18,7 +18,6 @@ import {
     toCompiledPath,
     toImportsPath,
     toMD5Path,
-    toRelativePath,
     transformedRequireName,
     version
 } from "./shared";
@@ -80,7 +79,7 @@ function compileTypescript(file: string): string {
     fs.writeFileSync(compiledPath, compiled);
     fs.writeFileSync(toMD5Path(compiledPath), curMD5);
     fs.writeFileSync(toImportsPath(compiledPath), JSON.stringify(curImports));
-    importsBuffer[toRelativePath(compiledPath)] = curImports;
+    importsBuffer[compiledPath] = curImports;
 
     console.log('Compiled!');
     return compiled;
@@ -215,7 +214,7 @@ function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]):
         from = fs.existsSync(`${curPath}/${from}/index.ts`) ? `${from}/index` : from;
         let type: ImportType = predictImportType(from);
         if (type == 'source') {
-            from = toCompiledPath(normalizePath(path.resolve(curPath, from + '.ts')), false);
+            from = toCompiledPath(normalizePath(path.resolve(curPath, from + '.ts')));
         }
         curImports.push({from, type, identifiers});
         return ts.updateImportDeclaration(
@@ -230,7 +229,8 @@ function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]):
         }
 
         let from = node.getChildAt(3).getText().replace(/(^['"]\s*)|(\s*['"]$)/g, '');
-        from = toCompiledPath(normalizePath(path.resolve(curPath, from + '.ts')), false);
+        const sourcePath = path.resolve(curPath, from + '.ts');
+        from = toCompiledPath(normalizePath(sourcePath));
         curImports.push({from, type: "source", identifiers: []});
         return ts.createIdentifier(`/* insert export function here */\n__export(require("${from}"));`);
     }
@@ -278,7 +278,7 @@ function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]):
             throw new Error(`unsupported webpack loader ${loader}, fix me!`);
         }
         loader = !!loader ? '' : '!!node-loader!';
-        const file = loader + toCompiledPath(normalizePath(path.resolve(curPath, match[2])), false);
+        const file = loader + toCompiledPath(normalizePath(path.resolve(curPath, match[2])));
         curImports.push({type: "resource", identifiers: null, from: file});
         return ts.createCall(ts.createIdentifier(transformedRequireName),
             node.typeArguments, [ts.createLiteral(file)]);
@@ -444,7 +444,7 @@ function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]):
 
     function normalizeStringLiteralPath(value: string): string {
         value = value.replace(/(^['"]\s*)|(\s*['"]$)/g, '');
-        return toCompiledPath(normalizePath(path.resolve(curPath, value)), false);
+        return toCompiledPath(normalizePath(path.resolve(curPath, value)));
     }
 }
 

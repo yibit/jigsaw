@@ -29,10 +29,7 @@ if [ "$?" != "0" ]; then
     echo "Error: unable to compile project files!"
     exit 1
 fi
-if [ ! -e compiled/version.txt ]; then
-    echo "Error: the compiled files are not ready!"
-    exit 1
-fi
+cp version.txt compiled/
 
 echo "packing everything up, this should be fast"
 version=`cat compiled/version.txt`

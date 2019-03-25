@@ -19,7 +19,7 @@ export const nodeModulesRoot = normalizePath(`${awadeRoot}/web/node_modules`);
 export const transformedRequireName = '__origin_require_transformed_by_awade';
 export const identifierAliases = getIdentifierAliases(`${awadeRoot}/web/out/vmax-studio/awade/`);
 export const importsBuffer: ImportedFileMap = {};
-export const version = require(`${compiledRoot}/../config.json`).version;
+export const version = fs.readFileSync(`${compiledRoot}/../version.txt`).toString().trim();
 
 export const changes: Change[] = [];
 
@@ -53,17 +53,12 @@ export function reinit(): void {
     console.log('Reinitializing request sent!');
 }
 
-export function toCompiledPath(source: string, abs: boolean = true): string {
-    const absPath = !source.startsWith(normalizePath(`${compiledRoot}/`)) ?
+export function toCompiledPath(source: string): string {
+    return !source.startsWith(normalizePath(`${compiledRoot}/`)) ?
         source.replace(awadeRoot, compiledRoot)
             .replace(/\.ts$/, '.js')
             .replace(/\.scss$/, '.css') :
         source;
-    return abs ? absPath : toRelativePath(absPath);
-}
-
-export function toRelativePath(path: string): string {
-    return `.${path.substring(awadeRoot.length)}`;
 }
 
 export function toMD5Path(file: string): string {
@@ -75,7 +70,7 @@ export function toImportsPath(file: string): string {
 }
 
 export function checkInvolved(changed: string[], involved: ImportFile[]): boolean {
-    return changed.filter(ch => involved.find(i => i.from == toRelativePath(ch))).length > 0;
+    return changed.filter(ch => involved.find(i => i.from == ch)).length > 0;
 }
 
 export function expandPackagePath(pkgPath: string, identifiers?: ImportIdentifier[]): string {
