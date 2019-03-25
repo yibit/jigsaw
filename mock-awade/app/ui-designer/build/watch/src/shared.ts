@@ -3,7 +3,7 @@ import * as fs from "fs";
 import * as ts from "typescript";
 import * as http from "http";
 import {getIdentifierAliases} from "../../../plugins/installer/vendor-alias-parser";
-import {Change, ImportedFileMap, ImportFile, ImportType} from "./typings";
+import {Change, ImportedFileMap, ImportFile, ImportType, ImportIdentifier} from "./typings";
 
 export const builtInNodeModules = [
     'assert', 'async_hooks', 'child_process', 'cluster', 'console', 'crypto', 'dns', 'domain', 'events', 'fs',
@@ -53,12 +53,17 @@ export function reinit(): void {
     console.log('Reinitializing request sent!');
 }
 
-export function toCompiledPath(source: string): string {
-    return !source.startsWith(normalizePath(`${compiledRoot}/`)) ?
+export function toCompiledPath(source: string, abs: boolean = true): string {
+    const absPath = !source.startsWith(normalizePath(`${compiledRoot}/`)) ?
         source.replace(awadeRoot, compiledRoot)
             .replace(/\.ts$/, '.js')
             .replace(/\.scss$/, '.css') :
         source;
+    return abs ? absPath : toRelativePath(absPath);
+}
+
+export function toRelativePath(path: string): string {
+    return `.${path.substring(awadeRoot.length)}`;
 }
 
 export function toMD5Path(file: string): string {
@@ -70,10 +75,10 @@ export function toImportsPath(file: string): string {
 }
 
 export function checkInvolved(changed: string[], involved: ImportFile[]): boolean {
-    return changed.filter(ch => involved.find(i => i.from == ch)).length > 0;
+    return changed.filter(ch => involved.find(i => i.from == toRelativePath(ch))).length > 0;
 }
 
-export function expandPackagePath(pkgPath: string, identifiers?: string[]): string {
+export function expandPackagePath(pkgPath: string, identifiers?: ImportIdentifier[]): string {
     if (pkgPath.startsWith('@awade/')) {
         // 内置模块
         return pkgPath;
@@ -81,21 +86,25 @@ export function expandPackagePath(pkgPath: string, identifiers?: string[]): stri
 
     if (pkgPath.startsWith('rxjs/')) {
         // expand rxjs
-        return `./node_modules/${pkgPath}.js`;
+        if (pkgPath == 'rxjs/add/operator/mergeMap') {
+            return `./node_modules/rxjs/_esm5/operator/mergeMap.js`;
+        } else {
+            pkgPath = pkgPath.replace('rxjs/', 'rxjs/_esm5/');
+            return `./node_modules/${pkgPath}.js`;
+        }
     }
 
     const pkgJson = `${nodeModulesRoot}/${pkgPath}/package.json`;
     let transformed, type = predictImportType(pkgPath);
     if (type == "std_node_modules" && fs.existsSync(pkgJson)) {
         const pkgInfo = require(pkgJson);
-        const index = pkgInfo.module || pkgInfo.main;
+        const index = pkgInfo.module || pkgInfo.main || 'index.js';
         let transformedPath;
         if (index) {
             transformedPath = `${nodeModulesRoot}/${pkgPath}/${index}`;
         } else if (identifiers && identifiers.length > 0) {
             // 类似uuid这样的奇葩
-            const identifier = identifiers[0].split(/\s*as\s*/)[0];
-            transformedPath = `${nodeModulesRoot}/${pkgPath}/${identifier}.js`;
+            transformedPath = `${nodeModulesRoot}/${pkgPath}/${identifiers[0].alias}.js`;
             if (!fs.existsSync(transformedPath)) {
                 throw new Error("Error: invalid required node_modules: " + pkgPath);
             }

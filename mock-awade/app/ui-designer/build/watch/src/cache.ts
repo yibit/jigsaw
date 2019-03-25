@@ -5,7 +5,9 @@ import {tmpdir} from "os";
 import {execSync as shell} from "child_process";
 import {awadeRoot, compiledRoot, version} from "./shared";
 
-const compiledFileUrl = `http://localhost:9090/vmax-studio/download/app/ui-designer/build/watch/compiled-v${version}.zip`;
+export let initialized: boolean = false;
+
+const compiledFileUrl = `http://rdk.zte.com.cn/vmax-studio/awade-download/app/ui-designer/build/watch/compiled-v${version}.zip`;
 const cachedVersion = `${compiledRoot}/version.txt`;
 const toolsRoot = path.resolve(`${awadeRoot}/../../tools/mock-shell/usr/bin`);
 
@@ -18,7 +20,11 @@ export function downloadCompiledFiles(): Promise<void> {
         }
         if (fs.existsSync(cachedVersion) && fs.readFileSync(cachedVersion).toString() == version) {
             console.log('The compiled files are ready!');
-            resolve();
+            // 强制异步调用
+            setTimeout(() => {
+                initialized = true;
+                resolve();
+            }, 100);
             return;
         }
 
@@ -27,7 +33,9 @@ export function downloadCompiledFiles(): Promise<void> {
 }
 
 export function updateCachedVersion() {
-    fs.writeFileSync(cachedVersion, version);
+    if (fs.existsSync(compiledRoot)) {
+        fs.writeFileSync(cachedVersion, version);
+    }
 }
 
 function downloadFile(res, resolve): void {
@@ -37,6 +45,7 @@ function downloadFile(res, resolve): void {
 
     res.on("error", err => {
         console.error('Unable to download file, detail:', err);
+        initialized = true;
         resolve();
     });
 
@@ -48,15 +57,27 @@ function deployFile(data, resolve) {
     const zipFile = `${tmpdir()}/awade-watch-compiled-v${version}.zip`;
     fs.writeFileSync(zipFile, data, "binary");
 
-    console.log("File downloaded, deploying ....");
+    console.log("Cache files downloaded, deploying ....");
+
+    const tmpCompiled = `${tmpdir()}/awade-compiled-tmp`;
+    shell(`cmd /c ${toolsRoot}\\rm -fr ${tmpCompiled}`);
     try {
-        shell(`cmd /c ${toolsRoot}\\rm -fr ${compiledRoot}`);
-        shell(`cmd /c ${toolsRoot}\\unzip ${zipFile} -d ${compiledRoot}`);
-        updateCachedVersion();
-        console.log("The files have been deployed!");
+        shell(`cmd /c ${toolsRoot}\\unzip ${zipFile} -d ${tmpCompiled}`);
     } catch (e) {
         console.log("Unable to unzip the downloaded file!");
+        initialized = true;
+        resolve();
+        return;
     }
 
+    shell(`cmd /c ${toolsRoot}\\rm -fr ${zipFile}`);
+    shell(`cmd /c ${toolsRoot}\\rm -fr ${compiledRoot}`);
+    shell(`cmd /c ${toolsRoot}\\mv ${tmpCompiled}/compiled ${compiledRoot}`);
+    shell(`cmd /c ${toolsRoot}\\rm -fr ${awadeRoot}/web/out/vmax-studio/awade`);
+    shell(`cmd /c ${toolsRoot}\\mv ${tmpCompiled}/awade ${awadeRoot}/web/out/vmax-studio/`);
+
+    updateCachedVersion();
+    console.log("The files have been deployed!");
+    initialized = true;
     resolve();
 }

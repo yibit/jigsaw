@@ -4,12 +4,13 @@ import {awadeRoot, changes, compiledRoot, normalizePath, toCompiledPath} from ".
 import {compile, scriptFileNames, scriptVersions} from "./compile";
 import {ChangeEvent} from "./typings";
 import {createServerBundle, createWebBundle} from "./bundle";
-import {downloadCompiledFiles, updateCachedVersion} from "./cache";
+import {downloadCompiledFiles, initialized, updateCachedVersion} from "./cache";
 
 // 重置plugins/index.ts文件，这个在编译过程中会被修改
 fs.writeFileSync(`${awadeRoot}/compiler/module/src/plugins/index.ts`,
     fs.readFileSync(`${awadeRoot}/plugins/installer/plugins-index.template.ts`));
 
+const compileOnly = process.argv[2] == 'compile-only';
 const watchingDirs = [
     `${awadeRoot}/basics/src`, `${awadeRoot}/compiler/module/src`,
     `${awadeRoot}/services/src`, `${awadeRoot}/web/src`, `${awadeRoot}/sdk/src`,
@@ -23,14 +24,14 @@ const watcher = chokidar.watch(watchingDirs, {
         pollInterval: 100
     },
 });
-const compileOnly = process.argv[2] == 'compile-only';
+watcher
+    .on('add', path => cacheChange(path, 'add'))
+    .on('change', path => cacheChange(path, 'change'))
+    .on('unlink', path => cacheChange(path, 'unlink'));
 
-downloadCompiledFiles().then(() => {
-    watcher
-        .on('add', path => cacheChange(path, 'add'))
-        .on('change', path => cacheChange(path, 'change'))
-        .on('unlink', path => cacheChange(path, 'unlink'));
-});
+if (!compileOnly) {
+    downloadCompiledFiles().then(handleChanges);
+}
 
 let timerHandler = null;
 
@@ -50,6 +51,10 @@ function cacheChange(path: string, event: 'add' | 'change' | 'unlink'): void {
         changes.splice(idx, 1);
     }
     changes.push({path, event});
+
+    if (!initialized && !compileOnly) {
+        return;
+    }
 
     clearTimeout(timerHandler);
     timerHandler = setTimeout(() => {

@@ -2,19 +2,27 @@ import * as path from "path";
 import * as fs from "fs";
 import * as ts from "typescript";
 import * as MD5 from "md5.js";
+import * as base64 from "base64-js";
 import {sync as mkdir} from "mkdirp";
 import {execSync as shell} from "child_process";
 import {
     awadeRoot,
     expandPackagePath,
     getPath,
-    getScriptSnapshot, isTypescriptSource,
+    getScriptSnapshot,
+    importsBuffer,
+    isTypescriptSource,
     nodeModulesRoot,
     normalizePath,
     predictImportType,
-    toCompiledPath, toImportsPath, toMD5Path, importsBuffer, transformedRequireName, version
+    toCompiledPath,
+    toImportsPath,
+    toMD5Path,
+    toRelativePath,
+    transformedRequireName,
+    version
 } from "./shared";
-import {ImportFile, ImportType, InjectedParam} from "./typings";
+import {ImportFile, ImportIdentifier, ImportType, InjectedParam} from "./typings";
 
 export const scriptFileNames: string[] = [];
 export const scriptVersions = new Map<string, number>();
@@ -28,7 +36,7 @@ const servicesHost: ts.LanguageServiceHost = {
     getCurrentDirectory: () => awadeRoot,
     getCompilationSettings: () => ({
         module: ts.ModuleKind.CommonJS,
-        target: ts.ScriptTarget.ES5,
+        target: ts.ScriptTarget.ES2015,
         experimentalDecorators: true
     }),
     getDefaultLibFileName: options => ts.getDefaultLibFilePath(options),
@@ -72,7 +80,7 @@ function compileTypescript(file: string): string {
     fs.writeFileSync(compiledPath, compiled);
     fs.writeFileSync(toMD5Path(compiledPath), curMD5);
     fs.writeFileSync(toImportsPath(compiledPath), JSON.stringify(curImports));
-    importsBuffer[toCompiledPath(file)] = curImports;
+    importsBuffer[toRelativePath(compiledPath)] = curImports;
 
     console.log('Compiled!');
     return compiled;
@@ -86,9 +94,27 @@ function compileScss(file: string): string {
 
     console.log('Compiling...');
     const outFile = toCompiledPath(file);
-    const cmd = `${nodeSass} --output-style compressed -o ${getPath(outFile)} ${file}`;
-    shell(cmd);
-    compiled = fs.readFileSync(outFile).toString();
+    try {
+        compiled = shell(`${nodeSass} --output-style compressed ${file}`).toString();
+    } catch (e) {
+        console.error('Unable to compile scss: ' + file);
+        console.error(e.message);
+        return null;
+    }
+
+    // 将css中引用到的图片转为base64方式
+    compiled = compiled.replace(/\burl\((.*?)\)/g, (found, url) => {
+        const assetFile = `${getPath(file)}/${url}`;
+        if (fs.existsSync(assetFile)) {
+            const encoded = base64.fromByteArray(fs.readFileSync(assetFile));
+            return `url(data:image/png;base64,${encoded})`;
+        } else {
+            console.error('asset file not found: ' + assetFile);
+            return found;
+        }
+    });
+
+    mkdir(getPath(outFile));
     fs.writeFileSync(outFile, compiled);
     fs.writeFileSync(toMD5Path(outFile), curMD5);
     console.log('Compiled!');
@@ -153,24 +179,43 @@ function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]):
 
     function processImportDeclaration(node: ts.Node): ts.Node {
         // 有的非标准的import语法：import "xxxx"; 要过滤掉
-        if (!ts.isImportDeclaration(node) || node.getChildCount() < 4) {
+        if (!ts.isImportDeclaration(node)) {
             return node;
         }
 
-        const clauseNode = node.getChildAt(1).getChildAt(0);
-        let identifiers: string[];
-        if (clauseNode.kind == ts.SyntaxKind.NamedImports) {
-            // import {ClassA, ClassB} from "fdfdfd"; 的方式
-            identifiers = clauseNode.getChildAt(1).getText().split(/\s*,\s*/);
+        let from, identifiers: ImportIdentifier[];
+        if (node.getChildCount() < 4) {
+            // 类似  import "rxjs/add/operator/mergeMap"; 这样的写法
+            from = node.getChildAt(1).getText();
+            identifiers = [];
         } else {
-            // import * as ts from "fdfdf"; 的方式
-            identifiers = [clauseNode.getChildAt(2).getText()];
+            // 标准的import写法：
+            // import * as xx from "yy"
+            // import {aa, bb as BB} from "cc"
+            const clauseNode = node.getChildAt(1).getChildAt(0);
+            if (clauseNode.kind == ts.SyntaxKind.NamedImports) {
+                // import {ClassA, ClassB} from "fdfdfd"; 的方式
+                identifiers = clauseNode.getChildAt(1).getText().split(/\s*,\s*/)
+                    .map(raw => {
+                        const tmp = raw.split(/\s+as\s+/);
+                        if (tmp.length == 1) {
+                            tmp.push(tmp[0]);
+                        }
+                        return {alias: tmp[0], identifier: tmp[1]};
+                    });
+            } else {
+                // import * as ts from "fdfdf"; 的方式
+                const identifier = clauseNode.getChildAt(2).getText();
+                identifiers = [{identifier, alias: identifier}];
+            }
+            from = node.getChildAt(3).getText();
         }
-        let from = node.getChildAt(3).getText().replace(/(^['"]\s*)|(\s*['"]$)/g, '');
+
+        from = from.replace(/(^['"]\s*)|(\s*['"]$)/g, '');
         from = fs.existsSync(`${curPath}/${from}/index.ts`) ? `${from}/index` : from;
         let type: ImportType = predictImportType(from);
         if (type == 'source') {
-            from = toCompiledPath(normalizePath(path.resolve(curPath, from + '.ts')));
+            from = toCompiledPath(normalizePath(path.resolve(curPath, from + '.ts')), false);
         }
         curImports.push({from, type, identifiers});
         return ts.updateImportDeclaration(
@@ -185,7 +230,7 @@ function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]):
         }
 
         let from = node.getChildAt(3).getText().replace(/(^['"]\s*)|(\s*['"]$)/g, '');
-        from = toCompiledPath(normalizePath(path.resolve(curPath, from + '.ts')));
+        from = toCompiledPath(normalizePath(path.resolve(curPath, from + '.ts')), false);
         curImports.push({from, type: "source", identifiers: []});
         return ts.createIdentifier(`/* insert export function here */\n__export(require("${from}"));`);
     }
@@ -233,7 +278,7 @@ function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]):
             throw new Error(`unsupported webpack loader ${loader}, fix me!`);
         }
         loader = !!loader ? '' : '!!node-loader!';
-        const file = loader + toCompiledPath(normalizePath(path.resolve(curPath, match[2])));
+        const file = loader + toCompiledPath(normalizePath(path.resolve(curPath, match[2])), false);
         curImports.push({type: "resource", identifiers: null, from: file});
         return ts.createCall(ts.createIdentifier(transformedRequireName),
             node.typeArguments, [ts.createLiteral(file)]);
@@ -252,7 +297,7 @@ function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]):
             // 比如下面这样的
             // import {Component as MyComponent} from '@angular/core';
             // @MyComponent(...) class XX;
-            return decoratorName == 'Component' || decoratorName == 'NgModule';
+            return ['Component', 'NgModule', 'Injectable', 'Directive', 'Pipe'].indexOf(decoratorName) != -1;
         });
         if (!decoratorNode) {
             return node;
@@ -260,49 +305,55 @@ function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]):
 
         // 下面这段用于处理原来渲染器里的 templateUrl/styleUrls 这2个字段的值
         const callNode: ts.CallExpression = decoratorNode.getChildAt(1) as ts.CallExpression;
-        const propertiesNode = callNode.getChildAt(2).getChildAt(0).getChildAt(1);
-        if (!propertiesNode) {
-            // 把传给渲染器的对象写成变量的方式了，不理他
-            return node;
+        const syntaxListNode = callNode.getChildAt(2);
+        // let properties: ts.ObjectLiteralElementLike[];
+        let decoratorArguments: ts.ObjectLiteralExpression[];
+        if (syntaxListNode.getChildCount() > 0) {
+            // 这个渲染器没有入参
+            const propertiesNode = syntaxListNode.getChildAt(0).getChildAt(1);
+            // 把传给渲染器的对象写成变量的方式了会导致propertiesNode是空
+            if (!!propertiesNode) {
+                let properties = propertiesNode.getChildren()
+                    .filter(c => c.kind == ts.SyntaxKind.PropertyAssignment)
+                    .map((propNode: ts.PropertyAssignment) => {
+                        const prop = propNode.getChildAt(0).getText();
+                        if (prop == 'templateUrl') {
+                            const resource: ImportFile = {
+                                from: normalizeStringLiteralPath(propNode.getChildAt(2).getText()),
+                                identifiers: null,
+                                type: "resource"
+                            };
+                            curImports.push(resource);
+                            return ts.createPropertyAssignment(
+                                ts.createIdentifier('template'),
+                                ts.createCall(ts.createIdentifier('require'), [], [
+                                    ts.createLiteral(resource.from)
+                                ])
+                            )
+                        } else if (prop == 'styleUrls') {
+                            const cssResources = propNode.getChildAt(2).getChildAt(1).getChildren()
+                                .filter(c => c.kind == ts.SyntaxKind.StringLiteral)
+                                .map(strLiter => normalizeStringLiteralPath(strLiter.getText()));
+                            curImports.push(...cssResources.map(res => ({
+                                from: res, identifiers: null, type: "resource" as ImportType
+                            })));
+                            const arrLiterVal = cssResources
+                                .map(str => ts.createCall(ts.createIdentifier('require'),
+                                    [], [ts.createLiteral(str)]));
+                            return ts.createPropertyAssignment(
+                                ts.createIdentifier('styles'),
+                                ts.createArrayLiteral(arrLiterVal, false)
+                            )
+                        } else {
+                            return ts.createPropertyAssignment(
+                                ts.createIdentifier(prop),
+                                propNode.initializer
+                            )
+                        }
+                    });
+                decoratorArguments = [ts.createObjectLiteral(properties, true)];
+            }
         }
-        const properties = propertiesNode.getChildren()
-            .filter(c => c.kind == ts.SyntaxKind.PropertyAssignment)
-            .map((propNode: ts.PropertyAssignment) => {
-                const prop = propNode.getChildAt(0).getText();
-                if (prop == 'templateUrl') {
-                    const resource: ImportFile = {
-                        from: normalizeStringLiteralPath(propNode.getChildAt(2).getText()),
-                        identifiers: null,
-                        type: "resource"
-                    };
-                    curImports.push(resource);
-                    return ts.createPropertyAssignment(
-                        ts.createIdentifier('template'),
-                        ts.createCall(ts.createIdentifier('require'), [], [
-                            ts.createLiteral(resource.from)
-                        ])
-                    )
-                } else if (prop == 'styleUrls') {
-                    const cssResources = propNode.getChildAt(2).getChildAt(1).getChildren()
-                        .filter(c => c.kind == ts.SyntaxKind.StringLiteral)
-                        .map(strLiter => normalizeStringLiteralPath(strLiter.getText()));
-                    curImports.push(...cssResources.map(res => ({
-                        from: res, identifiers: null, type: "resource" as ImportType
-                    })));
-                    const arrLiterVal = cssResources
-                        .map(str => ts.createCall(ts.createIdentifier('require'),
-                            [], [ts.createLiteral(str)]));
-                    return ts.createPropertyAssignment(
-                        ts.createIdentifier('styles'),
-                        ts.createArrayLiteral(arrLiterVal, false)
-                    )
-                } else {
-                    return ts.createPropertyAssignment(
-                        ts.createIdentifier(prop),
-                        propNode.initializer
-                    )
-                }
-            });
 
         // 下面这段代码用于给当前类添加一个新的渲染器 __metadata 这是angular编译器要用的
         const injectedParams = parseInjectedParams(node).map(param => {
@@ -321,9 +372,7 @@ function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]):
             )
         });
         const fixedDecorator = ts.updateDecorator(decoratorNode,
-            ts.updateCall(callNode, callNode.expression, callNode.typeArguments, [
-                ts.createObjectLiteral(properties, true)
-            ]));
+            ts.updateCall(callNode, callNode.expression, callNode.typeArguments, decoratorArguments));
         return ts.updateClassDeclaration(
             node, [fixedDecorator, ts.createDecorator(
                 ts.createCall(ts.createIdentifier('__metadata'), undefined, [
@@ -341,20 +390,34 @@ function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]):
 
         let node = findChildByType(classNode, ts.SyntaxKind.Identifier);
         let injectedParams: InjectedParam[] = [];
-        node = findChildByType(classNode, ts.SyntaxKind.SyntaxList, classNode.getChildren().indexOf(node));
+        node = findLastChildByType(classNode, ts.SyntaxKind.SyntaxList);
         const ctorNode = findChildByType(node, ts.SyntaxKind.Constructor);
         if (!ctorNode) {
             // 没有定义构造函数
             return injectedParams;
         }
 
+        // 将所有import扁平化，要不然一个二维结构不方便检索
+        const flatten = [];
+        curImports.forEach(imf => {
+            if (!imf.identifiers) {
+                return;
+            }
+            imf.identifiers.forEach(id => {
+                const obj: any = {...id};
+                obj.from = imf.from;
+                flatten.push(obj);
+            });
+        });
         const paramList = ctorNode.getChildAt(2);
         paramList.getChildren().filter(p => p.kind == ts.SyntaxKind.Parameter).forEach(paramNode => {
             // 最开始可能有public等修饰符，不理他
             const name = findChildByType(paramNode, ts.SyntaxKind.Identifier).getText().trim();
             const type = findChildByType(paramNode, ts.SyntaxKind.TypeReference).getText().trim();
-            const from = curImports.find(imf => imf.identifiers.indexOf(type) != -1).from;
-            injectedParams.push({name, from, type});
+            const found = flatten.find(imp => imp.alias == type);
+            if (found) {
+                injectedParams.push({name, from: found.from, type: found.identifier});
+            }
         });
 
         return injectedParams;
@@ -369,9 +432,19 @@ function transformer<T extends ts.Node>(file: string, curImports: ImportFile[]):
         }
     }
 
+    function findLastChildByType(node: ts.Node, type: ts.SyntaxKind, fromIdx: number = NaN): ts.Node {
+        fromIdx = isNaN(fromIdx) ? node.getChildCount() : fromIdx;
+        while (true) {
+            const ch = node.getChildAt(--fromIdx);
+            if (!ch || ch.kind == type || fromIdx == 0 /* 这个if必须放最后一个 */) {
+                return ch;
+            }
+        }
+    }
+
     function normalizeStringLiteralPath(value: string): string {
         value = value.replace(/(^['"]\s*)|(\s*['"]$)/g, '');
-        return toCompiledPath(normalizePath(path.resolve(curPath, value)));
+        return toCompiledPath(normalizePath(path.resolve(curPath, value)), false);
     }
 }
 

@@ -10,7 +10,7 @@ import {
     importsBuffer,
     nodeModulesRoot,
     reinit,
-    toImportsPath, transformedRequireName,
+    toImportsPath, toRelativePath, transformedRequireName,
 } from "./shared";
 import {ImportFile, ProcessedContent} from "./typings";
 
@@ -25,7 +25,7 @@ export function createServerBundle(changedFiles: string[], entryFile: string, ou
 
     const isCreatingServices = entryFile.indexOf('services/src/exports.js') != -1;
     const logFile = `${compiledRoot}/services/src/utils/log.js`;
-    const consoleDef = `var console = require("${logFile}");`;
+    const consoleDef = `var console = require("${toRelativePath(logFile)}");`;
     // 编译好的块需要根据当前输出目标做一些具体化的处理
     const processedScripts = involved
         .filter(module => ["std_node_modules", "non_std_node_modules", "source"].indexOf(module.type) != -1)
@@ -45,7 +45,8 @@ export function createServerBundle(changedFiles: string[], entryFile: string, ou
             } else if (module.type == 'non_std_node_modules') {
                 throw new Error('non_std_node_modules in services: fix me!');
             } else if (module.type == 'source') {
-                result.content = fs.readFileSync(module.from).toString().replace(transformedRequireRegexp, 'require');
+                result.content = fs.existsSync(module.from) ? fs.readFileSync(module.from).toString() : '';
+                result.content = result.content.replace(transformedRequireRegexp, 'require');
                 if (isCreatingServices && result.content.indexOf(consoleDef) == -1 && logFile != module.from) {
                     result.content = `${consoleDef}\n${result.content}`;
                 }
@@ -59,13 +60,13 @@ export function createServerBundle(changedFiles: string[], entryFile: string, ou
     console.log(`Creating bundle ${outFile} ...`);
     let out = '';
     processedScripts.forEach(module => {
-        out += `/***/ "${module.from}":\n`;
+        out += `/***/ "${toRelativePath(module.from)}":\n`;
         out += '/***/ (function(module, exports, require) {\n';
         out += module.content + '\n';
         out += '/***/ }),\n\n';
     });
     processedResources.forEach(module => {
-        out += `/***/ "${module.from}":\n`;
+        out += `/***/ "${toRelativePath(module.from)}":\n`;
         out += '/***/ (function(module, exports) {\n';
         out += `module.exports = ${module.content};\n`;
         out += '/***/ }),\n\n';
@@ -134,7 +135,7 @@ export function createServerBundle(changedFiles: string[], entryFile: string, ou
 /******/ 	__webpack_require__.p = "";
 /******/
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(__webpack_require__.s = "${entryFile}");
+/******/ 	return __webpack_require__(__webpack_require__.s = "${toRelativePath(entryFile)}");
 /******/ })
 /************************************************************************/
 /******/ ({
@@ -185,13 +186,13 @@ export function createWebBundle(changedFiles: string[], bundleName: string, entr
     console.log(`Creating bundle ${outFile} ...`);
     let out = '';
     processedScripts.forEach(module => {
-        out += `/***/ "${module.from}":\n`;
+        out += `/***/ "${toRelativePath(module.from)}":\n`;
         out += '/***/ (function(module, exports, require) {\n';
         out += module.content + '\n';
         out += '/***/ }),\n\n';
     });
     processedResources.forEach(module => {
-        out += `/***/ "${module.from}":\n`;
+        out += `/***/ "${toRelativePath(module.from)}":\n`;
         out += '/***/ (function(module, exports) {\n';
         out += `module.exports = ${module.content};\n`;
         out += '/***/ }),\n\n';
@@ -224,15 +225,14 @@ ${out}`;
         out += `
             /***/ 0:
             /***/ (function(module, exports, require) {
-            
-            // 在main中统一处理别名的问题
-            ${generateAliasRollbackCode()}
-            
-            module.exports = require("${entryFile}");
-            
-            
+
+                // 在main中统一处理别名的问题
+                ${generateAliasRollbackCode()}
+
+                module.exports = require("${toRelativePath(entryFile)}");
+
             /***/ })
-            
+
             },[0]);
         `;
     } else {
@@ -245,7 +245,7 @@ ${out}`;
                     for (var p in m) if (!exports.hasOwnProperty(p)) exports[p] = m[p];
                 }
                 Object.defineProperty(exports, "__esModule", { value: true });
-                __export(require("${entryFile}"));
+                __export(require("${toRelativePath(entryFile)}"));
             /***/ })
             });
         `;
@@ -283,10 +283,12 @@ function stripLibFromVendorBundle() {
 function generateAliasRollbackCode(): string {
     const mainBundleInvolved = traceInvolved(`${compiledRoot}/web/src/main.js`);
     const basicsBundleInvolved = traceInvolved(`${compiledRoot}/basics/src/public_api.js`);
+    const sdkBundleInvolved = traceInvolved(`${compiledRoot}/sdk/src/public_api.js`);
+    const compilerBundleInvolved = traceInvolved(`${compiledRoot}/compiler/module/src/public_api.js`);
 
     // 处理别名的问题
     let aliasRollback = 'let _tmpModule;\n';
-    mainBundleInvolved.concat(...basicsBundleInvolved)
+    mainBundleInvolved.concat(...basicsBundleInvolved).concat(...sdkBundleInvolved).concat(...compilerBundleInvolved)
         .filter(i => i.type == 'std_node_modules' || i.type == 'non_std_node_modules')
         // 去重
         .filter((item, idx, arr) => idx == arr.findIndex(i => i.from == item.from))
