@@ -66,28 +66,18 @@ function deployFile(data, resolve) {
     sh.rm('-fr', zipFile);
     sh.rm('-fr', compiledRoot);
     const len = `${tmpCompiled}/compiled`.length;
-    const re1 = /(require|__origin_require_transformed_by_awade)\("(!!node-loader!)?.*?\/build\/watch\/compiled\/(.*?)"\)/g;
-    const re2 = /(!!node-loader!)?.*?\/build\/watch\/compiled\/(.*?)/g;
+    const re = /"(!!node-loader!)?.+?\/build\/watch\/compiled\/(.+?)"/g;
     sh.find(`${tmpCompiled}/compiled`).forEach(file => {
         // 因为从服务器下载得到的文件里带的绝对路径是服务器上的，这里需要修正为本地路径
         if (fs.statSync(file).isDirectory()) {
             return;
         }
         let content = fs.readFileSync(file).toString();
-        if (file.match(/.+\.js$/i)) {
-            content = content.replace(re1, (found, req, nodeLoader, path) => {
+        if (file.match(/.+\.(js|import)$/i)) {
+            content = content.replace(re, (found, nodeLoader, path) => {
                 nodeLoader = nodeLoader ? nodeLoader : '';
-                return `${req}("${nodeLoader}${compiledRoot}/${path}")`;
+                return `"${nodeLoader}${compiledRoot}/${path}"`;
             });
-        } else if (file.match(/.+\.import$/i)) {
-            const imports: ImportFile[] = JSON.parse(content);
-            imports.forEach(im => {
-                im.from = im.from.replace(re2, (found, nodeLoader, path) => {
-                    nodeLoader = nodeLoader ? nodeLoader : '';
-                    return `${nodeLoader}${compiledRoot}/${path}`;
-                });
-            });
-            content = JSON.stringify(imports);
         }
         file = compiledRoot + file.substring(len);
         sh.mkdir('-p', getPath(file));
